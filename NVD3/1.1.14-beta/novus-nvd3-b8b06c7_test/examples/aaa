@@ -1,0 +1,64 @@
+<svg>
+    <g class="nvd3 nv-wrap nv-discreteBarWithAxes">
+        <g transform="translate(60,15)">
+            <defs>
+                <clipPath id="nv-x-label-clip-3389">
+                    <rect width="7363.636363636363" height="16" x="-3681.8181818181815"></rect>
+                </clipPath>
+            </defs>
+            <g class="nv-x nv-axis" transform="translate(0,435)">
+                <g class="nvd3 nv-wrap nv-axis">
+                    <g>
+                        <g class="tick major" transform="translate(4500,0)" style="opacity: 1;">
+                            <line y2="-435" x2="0"></line>
+                            <text y="3" dy=".71em" x="0" style="text-anchor: middle;">Test0</text>
+                        </g>
+                        <path class="domain" d="M0,0V0H9000V0"></path>
+                        <text class="nv-axislabel" text-anchor="middle" y="36" x="NaN"></text>
+                    </g>
+                </g>
+            </g>
+
+            <g class="nv-y nv-axis">
+                <g class="nv-zeroLine">
+                    <line x1="0" x2="680" y1="435" y2="435"></line>
+                </g>
+                <g class="nvd3 nv-wrap nv-axis">
+                    <g>
+                        <g class="tick major" transform="translate(0,435)" style="opacity: 1;">
+                            <line x2="680" y2="0"></line>
+                            <text x="-3" dy=".32em" opacity="0" y="0" style="text-anchor: end;">0.0</text>
+                        </g>
+
+                        <g class="tick major" transform="translate(0,407.8125)" style="opacity: 1;">
+                            <line x2="680" y2="0"></line>
+                            <text x="-3" dy=".32em" opacity="1" y="0" style="text-anchor: end;">5.0</text>
+                        </g>
+                        <g class="tick major" transform="translate(0,380.625)" style="opacity: 1;">
+                            <line x2="680" y2="0"></line>
+                            <text x="-3" dy=".32em" opacity="1" y="0" style="text-anchor: end;">10.0</text>
+                        </g>
+                        <g class="tick major" transform="translate(0,353.4375)" style="opacity: 1;">
+                            <line x2="680" y2="0"></line>
+                            <text x="-3" dy=".32em" opacity="1" y="0" style="text-anchor: end;">15.0</text>
+                        </g>
+
+<g class="tick major" transform="translate(0,326.25)" style="opacity: 1;"><line x2="680" y2="0"></line><text x="-3" dy=".32em" opacity="1" y="0" style="text-anchor: end;">20.0</text></g><g class="tick major" transform="translate(0,299.0625)" style="opacity: 1;"><line x2="680" y2="0"></line><text x="-3" dy=".32em" opacity="1" y="0" style="text-anchor: end;">25.0</text></g><g class="tick major" transform="translate(0,271.875)" style="opacity: 1;"><line x2="680" y2="0"></line><text x="-3" dy=".32em" opacity="1" y="0" style="text-anchor: end;">30.0</text></g><g class="tick major" transform="translate(0,244.6875)" style="opacity: 1;"><line x2="680" y2="0"></line><text x="-3" dy=".32em" opacity="1" y="0" style="text-anchor: end;">35.0</text></g><g class="tick major" transform="translate(0,217.5)" style="opacity: 1;"><line x2="680" y2="0"></line><text x="-3" dy=".32em" opacity="1" y="0" style="text-anchor: end;">40.0</text></g><g class="tick major" transform="translate(0,190.3125)" style="opacity: 1;"><line x2="680" y2="0"></line><text x="-3" dy=".32em" opacity="1" y="0" style="text-anchor: end;">45.0</text></g><g class="tick major" transform="translate(0,163.125)" style="opacity: 1;"><line x2="680" y2="0"></line><text x="-3" dy=".32em" opacity="1" y="0" style="text-anchor: end;">50.0</text></g><g class="tick major" transform="translate(0,135.9375)" style="opacity: 1;"><line x2="680" y2="0"></line><text x="-3" dy=".32em" opacity="1" y="0" style="text-anchor: end;">55.0</text></g><g class="tick major" transform="translate(0,108.75)" style="opacity: 1;"><line x2="680" y2="0"></line><text x="-3" dy=".32em" opacity="1" y="0" style="text-anchor: end;">60.0</text></g><g class="tick major" transform="translate(0,81.5625)" style="opacity: 1;"><line x2="680" y2="0"></line><text x="-3" dy=".32em" opacity="1" y="0" style="text-anchor: end;">65.0</text></g><g class="tick major" transform="translate(0,54.375)" style="opacity: 1;"><line x2="680" y2="0"></line><text x="-3" dy=".32em" opacity="1" y="0" style="text-anchor: end;">70.0</text></g><g class="tick major" transform="translate(0,27.1875)" style="opacity: 1;"><line x2="680" y2="0"></line><text x="-3" dy=".32em" opacity="1" y="0" style="text-anchor: end;">75.0</text></g><g class="tick major" transform="translate(0,0)" opacity="0" style="opacity: 1;"><line x2="680" y2="0"></line><text x="-3" dy=".32em" opacity="0" y="0" style="text-anchor: end;">80.0</text></g><path class="domain" d="M0,0H0V435H0"></path><text class="nv-axislabel" transform="rotate(-90)" y="-63" x="-217.5" style="text-anchor: middle;"></text></g><g class="nv-axisMaxMin" transform="translate(0,435)"><text dy=".32em" y="0" x="-3" text-anchor="end" style="opacity: 1;">0.0</text></g><g class="nv-axisMaxMin" transform="translate(0,0)"><text dy=".32em" y="0" x="-3" text-anchor="end" style="opacity: 1;">80.0</text></g></g></g>
+
+<g class="nv-barsWrap">
+    <g class="nvd3 nv-wrap nv-discretebar" transform="translate(0,0)">
+        <g>
+            <g class="nv-groups">
+                <g class="nv-group nv-series-0" style="stroke-opacity: 1; fill-opacity: 0.75;">
+                    <g transform="translate(1186.3636474609375,0)" class="nv-bar positive" style="fill: #1f77b4; stroke: #1f77b4;">
+                        <rect height="435" width="6627.272727272727" class="discreteBar" transform="translate(0,0)"></rect>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</g>
+
+
+
+<g class="nv-y2 nv-axis" transform="translate(680,0)"><g class="nvd3 nv-wrap nv-axis"><g><g class="tick major" transform="translate(0,0)" style="opacity: 1;"><line x2="6" y2="0"></line><text x="9" dy=".32em" y="0" style="text-anchor: start;">0.0</text></g><g class="tick major" transform="translate(0,0.1)" style="opacity: 1;"><line x2="6" y2="0"></line><text x="9" dy=".32em" y="0" style="text-anchor: start;">0.1</text></g><g class="tick major" transform="translate(0,0.2)" style="opacity: 1;"><line x2="6" y2="0"></line><text x="9" dy=".32em" y="0" style="text-anchor: start;">0.2</text></g><g class="tick major" transform="translate(0,0.3)" style="opacity: 1;"><line x2="6" y2="0"></line><text x="9" dy=".32em" y="0" style="text-anchor: start;">0.3</text></g><g class="tick major" transform="translate(0,0.4)" style="opacity: 1;"><line x2="6" y2="0"></line><text x="9" dy=".32em" y="0" style="text-anchor: start;">0.4</text></g><g class="tick major" transform="translate(0,0.5)" style="opacity: 1;"><line x2="6" y2="0"></line><text x="9" dy=".32em" y="0" style="text-anchor: start;">0.5</text></g><g class="tick major" transform="translate(0,0.6)" style="opacity: 1;"><line x2="6" y2="0"></line><text x="9" dy=".32em" y="0" style="text-anchor: start;">0.6</text></g><g class="tick major" transform="translate(0,0.7)" style="opacity: 1;"><line x2="6" y2="0"></line><text x="9" dy=".32em" y="0" style="text-anchor: start;">0.7</text></g><g class="tick major" transform="translate(0,0.8)" style="opacity: 1;"><line x2="6" y2="0"></line><text x="9" dy=".32em" y="0" style="text-anchor: start;">0.8</text></g><g class="tick major" transform="translate(0,0.9)" style="opacity: 1;"><line x2="6" y2="0"></line><text x="9" dy=".32em" y="0" style="text-anchor: start;">0.9</text></g><g class="tick major" transform="translate(0,1)" style="opacity: 1;"><line x2="6" y2="0"></line><text x="9" dy=".32em" y="0" style="text-anchor: start;">1.0</text></g><path class="domain" d="M6,0H0V1H6"></path><text class="nv-axislabel" transform="rotate(90)" y="-63" x="0" style="text-anchor: middle;"></text></g></g></g><g class="nv-linesWrap"></g></g></g></svg>

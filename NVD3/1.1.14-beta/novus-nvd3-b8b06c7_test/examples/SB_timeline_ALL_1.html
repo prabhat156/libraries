@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<link href="../src/nv.d3.css" rel="stylesheet" type="text/css">
+
+<style>
+
+body {
+  overflow-y:scroll;
+}
+
+text {
+  font: 12px sans-serif;
+}
+
+svg {
+  display: block;
+}
+
+#chart1 svg {
+  height: 600px;
+  min-width: 100px;
+  min-height: 100px;
+/*
+  margin: 50px;
+  Minimum height and width is a good idea to prevent negative SVG dimensions...
+  For example width should be =< margin.left + margin.right + 1,
+  of course 1 pixel for the entire chart would not be very useful, BUT should not have errors
+*/
+}
+
+</style>
+<body>
+
+  <div id="chart" class='with-3d-shadow with-transitions'>
+    <svg style="height: 600px;"></svg>
+  </div>
+
+<script src="../lib/d3.v3.js"></script>
+<script src="../nv.d3.js"></script>
+<script src="../src/tooltip.js"></script>
+<script src="../src/utils.js"></script>
+<script src="../src/models/legend.js"></script>
+<script src="../src/models/axis.js"></script>
+<script src="../src/models/scatter.js"></script>
+<script src="../src/models/line.js"></script>
+<script src="../src/models/groupedArea.js"></script>
+<script src="../src/models/stackedArea.js"></script>
+<script src="../src/models/stackedAreaNew.js"></script>
+<script src="../src/models/SB_timeline_ALL.js"></script>
+<script src="stream_layers.js"></script>
+<script>
+
+
+    /*
+    // Test Data
+    // Data for chart.
+    var timelineData = d3.range(3).map(function(d,i){
+                        var keyName;
+                        if(i==0) keyName = 'Pepsi';
+                        if(i==1) keyName = 'Coke';
+                        if(i==2) keyName = 'Limca';
+                        return {
+                            key: keyName,
+                            timeline: true,
+                            values: d3.range(48).map(function(d,i){ 
+                                return {x: d3.time.minute.offset(new Date(2012, 1, 1, 12, 0), i*5), y: 100*Math.random()}})
+                        }
+                    });
+
+    timelineData.forEach(function(series, i){
+        var val1 = Math.round(47*Math.random());
+        var val2 = Math.round(47*Math.random());
+        console.log('VAL1: ' + val1 + ' VAL2: ' + val2);
+        series.values.forEach(function(point, j){
+            if(j==val1 || j==val2){
+                point.events = ['Pepsi30', 'Pepsi_60'];
+            }
+        });
+    });
+
+    var sentimentData = d3.range(3).map(function(d,i){
+                        var keyName;
+                        if(i==0) keyName = 'Pepsi';
+                        if(i==1) keyName = 'Coke';
+                        if(i==2) keyName = 'Limca';
+                        return {
+                            key: keyName,
+                            sentiment: true,
+                            values: d3.range(48).map(function(d,i){ 
+                                return {x: d3.time.minute.offset(new Date(2012, 1, 1, 12, 0), i*5), y: Math.random()}})
+                        }
+                    });
+
+    var eventsData = timelineData.map(function(d){
+                        return {
+                            key: d.key,
+                            event: true,
+                            values: d.values.filter(function(point){ return point.events})
+                        }
+                    });
+
+    eventsData.forEach(function(series){
+        var temp = series.values.map(function(d){
+            return d.events.map(function(dd, i){
+                return {
+                    x: d.x,
+                    y: d.y,
+                    label: dd,
+                    offset: i
+                }
+            });
+
+        });
+        series.values = d3.merge(temp);
+    });
+
+    var gameEventsData = d3.range(1).map(function(d){
+        return {
+            key: 'Game Events',
+            event: true,
+            disabled: false,
+            values: d3.range(3).map(function(d){
+                return {
+                    x: timelineData[0].values[Math.round(47*Math.random())].x,
+                    y: -1,
+                    events: ['Game1', 'Game2']
+                }
+            })
+        }
+    });
+    gameEventsData.forEach(function(series){
+        var temp = series.values.map(function(d){
+            return d.events.map(function(dd, i){
+                return {
+                    x: d.x,
+                    y: d.y,
+                    label: dd,
+                    offset: i
+                }
+            });
+
+        });
+        series.values = d3.merge(temp);
+    });
+    console.log(gameEventsData);
+
+    eventsData = eventsData.concat(gameEventsData);
+    var segmentData = [{segment: true, values: d3.range(3).map(function(d, i){
+            var label;
+            if(i==0) label = 'Pre-Game';
+            if(i==1) label = 'Q1'; 
+            if(i==2) label = 'Q2'; 
+            if(i<2){
+                return {
+                    x: timelineData[0].values[Math.round((i+1)*timelineData[0].values.length/3)].x,
+                    label: label
+                }
+                } else {
+                return {
+                    x: timelineData[0].values[timelineData[0].values.length-1].x,
+                    label: label
+                }
+            }
+    })}];
+    console.log(segmentData);
+
+    var plotData = timelineData.concat(sentimentData, eventsData, segmentData);
+
+    console.log(plotData);
+    */
+
+    // Variables for different types of data
+    var timelineData;
+    var sentimentData;
+    var adEventsData;
+    var gameEventsData;
+    var eventsData;
+    var segmentData;
+    var plotData
+
+    // Endpoints for the data
+    var urls = ["TIMELINE DATA URL", 
+                "SENTIMENT DATA URL"];
+
+    $(document).ready(function(){
+        $.ajax({
+            url: urls[0],
+            dataType: "jsonp",
+            success: function(response){
+                // Extract the timeline data
+                timelineData = Object.keys(response)
+                                .filter(function(key){ return key !== 'allEvents' && key !== 'periods'})
+                                .map(function(key, i){
+                                    return{
+                                        key: key,
+                                        timeline: true,
+                                        values: response[key].map(function(point){
+                                            // Map based on whether events are available or not
+                                            if(point.length > 2){
+                                                return {
+                                                    x: new Date(point[0]*1000),
+                                                    y: point[1],
+                                                    events: point[2]
+                                                }
+                                            } else {
+                                                return {
+                                                    x: new Date(point[0]*1000),
+                                                    y: point[1]
+                                                }
+                                            }
+                                        })
+                                    }
+                                });
+                // Create the ad events data
+                adEventsData = timelineData.map(function(series){
+                    return{
+                        key: series.key,
+                        event: true,
+                        values: series.values.filter(function(point){
+                            return typeof point.events !== 'undefined';
+                        })
+                    }
+                });
+                adEventsData.forEach(function(series){
+                    var temp = series.values.map(function(point){
+                        return d.events.map(function(ad_event, i){
+                            return {
+                                x: point.x,
+                                y: point.y,
+                                label: ad_event,
+                                offset: i
+                            }
+                        });
+                    });
+                    series.values = d3.merge(temp);
+                });
+
+                // Extract the game events data
+                gameEventsData = Object.keys(response)
+                                    .filter(function(key){ return key === 'allEvents'})
+                                    .map(function(key){
+                                        return{
+                                            key: key,
+                                            event: true,
+                                            disabled: false,
+                                            values: response[key].map(function(point){
+                                                return {
+                                                    x: new Date(point[0]*1000),
+                                                    y: -1,
+                                                    events: point[1]
+                                                }
+                                            })
+                                        }
+                                    });
+                gameEventsData.forEach(function(series){
+                    var temp = series.values.map(function(point){
+                        return d.events.map(function(game_event, i){
+                            return {
+                                x: point.x,
+                                y: point.y,
+                                label: game_event,
+                                offset: i
+                            }
+                        });
+                    });
+                    series.values = d3.merge(temp);
+                });
+                // Create the entire events data
+                eventsData = adEventsData.concat(gameEventsData);
+
+                // Extract the segments data
+                segmentData = Object.keys(response)
+                                .filter(function(key){ return key === 'periods'})
+                                .map(function(key){
+                                    return {
+                                        key: key,
+                                        segment: true,
+                                        values: response[key].map(function(point){
+                                            return {
+                                                x: new Date(point[0]*1000),
+                                                label: point[1]
+                                            }
+                                        })
+                                    }
+                                });
+
+                $.ajax({
+                    url: urls[1],
+                    dataType: "jsonp",
+                    success: function(response){
+                        // Extract the sentiment data
+                        sentimentData = Object.keys(response)
+                                        .map(function(key){
+                                            return{
+                                                key: key,
+                                                sentiment: true,
+                                                values: response[key].map(function(point){
+                                                    return {
+                                                        x: new Date(point[0]*1000),
+                                                        y: point[1]
+                                                    }
+                                                })
+                                            }
+                                        });
+
+                        // Create the entire data used to create the chart
+                        plotData = timelineData.concat(sentimentData, eventsData, segmentData);
+
+                        // Create the chart once all the data is loaded and pre-processed
+                        nv.addGraph(function() {
+                          var chart = nv.models.timelineAndSentimentChart();
+                        
+                          chart.yAxis
+                              .tickFormat(d3.format('f'));
+                          chart.y2Axis
+                              .tickFormat(d3.format('f'));
+                        
+                          chart.controlCB(function(){
+                              alert('This is the control function in html');
+                          });
+
+                          // Controls buttons    
+                          chart.showControls(true);
+                          chart.controlsData([
+                            //{key:'Count1', disabled:false, onClick: function(){alert('In count1');}}, 
+                            {key:'Count1', disabled:false}, 
+                            {key:'Percent1', disabled:true, onClick: function(){alert('In percent1');}}]
+                          );
+                        
+                          //TEST//chart.margin({top: 60, right: 80, bottom: 80, left: 80});
+                          chart.chartTitle("Superbowl Timeline");
+                        
+                          chart.yAxisLabel("Engagement Share")
+                              .y4AxisLabel("Total Engagements")
+                              .y3AxisLabel("+ve sentiment")
+                              //.color([d3.scale.category20().range()[0], d3.scale.category20().range()[2], d3.scale.category20().range()[6], d3.scale.category20().range()[12]])
+                              .color(["#FF0F00", "#FF9E01", "#04D215", "#0D52D1", "#8A0CCF", "#999999"])
+                              ;
+
+
+                          // Enable/Disable any of the extra features added. Set the extentThreshold based on the bin-width 
+                          //chart.extentThreshold(58570*5);
+                          chart.plotCumulativeArea(true);
+                          //chart.plotMarkers(true);
+                          chart.plotSegments(true);
+
+                          // Create the chart here 
+                          d3.select('#chart svg')
+                              .datum(plotData)
+                              .call(chart);
+                        
+                          nv.utils.windowResize(chart.update);
+                        
+                          return chart;
+                        });
+                    }
+                });
+            }
+        });
+    });
+
+</script>

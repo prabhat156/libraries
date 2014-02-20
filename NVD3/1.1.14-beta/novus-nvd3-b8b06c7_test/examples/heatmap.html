@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<link href="../src/nv.d3.css" rel="stylesheet" type="text/css">
+
+<style>
+
+body {
+  overflow-y:scroll;
+}
+
+text {
+  font: 12px sans-serif;
+}
+
+#chart1 {
+  margin: 10px;
+  min-width: 100px;
+  min-height: 100px;
+/*
+  Minimum height and width is a good idea to prevent negative SVG dimensions...
+  For example width should be =< margin.left + margin.right + 1,
+  of course 1 pixel for the entire chart would not be very useful, BUT should not have errors
+*/
+}
+
+#chart1 svg {
+  height: 480px;
+  width: 720px;
+}
+
+</style>
+<body>
+
+  <div id="chart1" class='with-3d-shadow with-transitions'>
+    <svg></svg>
+  </div>
+
+<script src="../lib/d3.v3.js"></script>
+<script src="../nv.d3.js"></script>
+<script src="../src/utils.js"></script>
+<script src="../src/tooltip.js"></script>
+<script src="../src/models/legend.js"></script>
+<script src="../src/models/axis.js"></script>
+<script src="../src/models/heatmap.js"></script>
+<script src="../src/models/heatmapChart.js"></script>
+<script src="stream_layers.js"></script>
+<script>
+
+
+//var json_data = {"nodes": [{"group": 1, "name": "Pink"}, {"group": 1, "name": "Michael Bolton"}, {"group": 1, "name": "Chrysler"}], "links": [{"source": 0, "target": 1, "value": 1.0}, {"source": 0, "target": 2, "value": 1.0}, {"source": 1, "target": 2, "value": 1.0}, {"source": 2, "target": 1, "value": 1.0}]};
+
+var json_data = {"nodes": [{"group": 1, "name": "Pink"}, {"group": 1, "name": "Michael Bolton"}, {"group": 1, "name": "Chrysler"}, {"group": 1, "name": "Nicki Minaj"}, {"group": 1, "name": "Jessie McCartney"}, {"group": 1, "name": "Chris Daughtry"}, {"group": 1, "name": "Beyonce"}, {"group": 1, "name": "The Ceremonies"}, {"group": 1, "name": "Marc Anthony"}, {"group": 1, "name": "Avicii"}], "links": [{"source": 0, "target": 1, "value": 1.0}, {"source": 0, "target": 2, "value": 1.0}, {"source": 0, "target": 3, "value": 2.0}, {"source": 0, "target": 4, "value": 1.0}, {"source": 0, "target": 5, "value": 1.0}, {"source": 0, "target": 6, "value": 1.0}, {"source": 0, "target": 7, "value": 1.0}, {"source": 0, "target": 8, "value": 1.0}, {"source": 0, "target": 9, "value": 1.0}, {"source": 1, "target": 2, "value": 1.0}, {"source": 1, "target": 4, "value": 1.0}, {"source": 1, "target": 5, "value": 1.0}, {"source": 1, "target": 7, "value": 1.0}, {"source": 1, "target": 8, "value": 1.0}, {"source": 2, "target": 1, "value": 1.0}, {"source": 2, "target": 4, "value": 1.0}, {"source": 2, "target": 5, "value": 1.0}, {"source": 2, "target": 7, "value": 1.0}, {"source": 3, "target": 0, "value": 1.0}, {"source": 3, "target": 6, "value": 1.0}, {"source": 3, "target": 7, "value": 1.0}, {"source": 3, "target": 8, "value": 1.0}, {"source": 3, "target": 9, "value": 1.0}, {"source": 4, "target": 1, "value": 1.0}, {"source": 4, "target": 5, "value": 1.0}, {"source": 4, "target": 7, "value": 1.0}, {"source": 4, "target": 8, "value": 1.0}, {"source": 5, "target": 1, "value": 1.0}, {"source": 5, "target": 4, "value": 1.0}, {"source": 5, "target": 7, "value": 1.0}, {"source": 5, "target": 8, "value": 1.0}, {"source": 5, "target": 9, "value": 1.0}, {"source": 6, "target": 0, "value": 3.0}, {"source": 6, "target": 1, "value": 1.0}, {"source": 6, "target": 3, "value": 1.0}, {"source": 6, "target": 4, "value": 1.0}, {"source": 6, "target": 5, "value": 1.0}, {"source": 6, "target": 7, "value": 1.0}, {"source": 6, "target": 8, "value": 1.0}, {"source": 6, "target": 9, "value": 1.0}, {"source": 7, "target": 1, "value": 1.0}, {"source": 7, "target": 4, "value": 1.0}, {"source": 7, "target": 5, "value": 1.0}, {"source": 7, "target": 8, "value": 1.0}, {"source": 8, "target": 1, "value": 1.0}, {"source": 8, "target": 2, "value": 1.0}, {"source": 8, "target": 3, "value": 1.0}, {"source": 8, "target": 4, "value": 1.0}, {"source": 8, "target": 5, "value": 2.0}, {"source": 8, "target": 6, "value": 1.0}, {"source": 8, "target": 7, "value": 2.0}, {"source": 8, "target": 9, "value": 1.0}, {"source": 9, "target": 0, "value": 1.0}, {"source": 9, "target": 1, "value": 1.0}, {"source": 9, "target": 2, "value": 1.0}, {"source": 9, "target": 3, "value": 1.0}, {"source": 9, "target": 4, "value": 1.0}, {"source": 9, "target": 5, "value": 1.0}, {"source": 9, "target": 6, "value": 1.0}, {"source": 9, "target": 7, "value": 1.0}, {"source": 9, "target": 8, "value": 1.0}]};
+
+
+
+
+
+
+
+
+
+
+
+
+var chart;
+nv.addGraph(function() {
+  chart = nv.models.heatmapChart()
+      //.x(function(d) { return d.label })
+      //.y(function(d) { return d.value })
+      //.margin({top: 30, right: 20, bottom: 50, left: 60})
+      //.showValues(true)
+      //.tooltips(false)
+      //.barColor(d3.scale.category20().range())
+      //.transitionDuration(250)
+      //.stacked(false)
+      //.color(['#FFFF00', '#FDD017', '#FF0000'])
+      //.color(["#FF0F00","#FF6600","#FF9E01","#FCD202","#F8FF01","#B0DE09","#04D215","#0D8ECF","#0D52D1","#2A0CD0","#8A0CCF","#CD0D74","#754DEB","#DDDDDD","#999999","#333333","#000000"])
+      .color(["#FF0F00","#FF6600","#FF9E01","#F8FF01","#B0DE09","#04D215","#0D8ECF","#0D52D1","#2A0CD0","#8A0CCF"])
+      //.showControls(false)
+      .chartTitle("Brand Co-occurence Matrix")
+      ;
+
+  // Some values
+  chart.numClusters(10);
+  chart.zzDomain([0,100]);
+  chart.valueFormat(function(d){ return d3.format('f')(d) + '%'});
+  //chart.valueFormat(function(d){ return ''});
+
+  d3.select('#chart1 svg')
+      .datum(json_data)
+      .call(chart);
+
+  nv.utils.windowResize(chart.update);
+
+  chart.dispatch.on('stateChange', function(e) { nv.log('New State:', JSON.stringify(e)); });
+
+  return chart;
+});
+
+
+
+</script>

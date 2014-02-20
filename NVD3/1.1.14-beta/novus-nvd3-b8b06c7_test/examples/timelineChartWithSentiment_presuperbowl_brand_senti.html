@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<link href="../src/nv.d3.css" rel="stylesheet" type="text/css">
+
+<style>
+
+body {
+  overflow-y:scroll;
+}
+
+text {
+  font: 12px sans-serif;
+}
+
+svg {
+  display: block;
+}
+
+#chart1 svg {
+  height: 600px;
+  min-width: 100px;
+  min-height: 100px;
+/*
+  margin: 50px;
+  Minimum height and width is a good idea to prevent negative SVG dimensions...
+  For example width should be =< margin.left + margin.right + 1,
+  of course 1 pixel for the entire chart would not be very useful, BUT should not have errors
+*/
+}
+
+</style>
+<body>
+
+  <div id="chart" class='with-3d-shadow with-transitions'>
+    <svg style="height: 600px;"></svg>
+  </div>
+</body>
+
+<script src="../lib/d3.v3.js"></script>
+<script src="../nv.d3.js"></script>
+<script src="../src/tooltip.js"></script>
+<script src="../src/utils.js"></script>
+<script src="../src/models/legend.js"></script>
+<script src="../src/models/axis.js"></script>
+<script src="../src/models/scatter.js"></script>
+<script src="../src/models/line.js"></script>
+<script src="../src/models/timelineAndSentimentChart_overlay_area.js"></script>
+<script src="stream_layers.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script>
+
+    $(document).ready(function(){
+        $.ajax({
+            //url : "http://localhost:5600/twitter/timelines?keyword=nfl&keyword=pepsi&start=1390599844&end=1390938192&binwidth=600&normalized=abs",
+            //url : "http://localhost:5600/twitter/brand_timelines?keyword=NFL&keyword=Pepsi&start=1390599844&end=1390938192&binwidth=120&normalized=abs",
+            url : "http://localhost:5600/twitter/brand_timelines?keyword=NFL&keyword=Pepsi&keyword=Peyton%20Manning&keyword=Seahawks&keyword=Cheerios&start=1390599844&end=1390938192&binwidth=120&normalized=abs",
+            dataType : "jsonp",
+            success : function(response){
+                var data = Object.keys(response).map(function(d,i){ 
+                    return {
+                        key: d,
+                        timeline: true,
+                        values: response[d].map(function(point){ 
+                            return {
+                                x: new Date(point[0]*1000),
+                                y: point[1]
+                        }})
+                }});
+
+                // jQuery for sentiment data
+                $.ajax({
+                    //url : "http://localhost:5600/twitter/brand_sentiment_timelines?keyword=NFL&keyword=Pepsi&start=1390599844&end=1390938192&binwidth=120",
+                    url : "http://localhost:5600/twitter/brand_sentiment_timelines?keyword=NFL&keyword=Pepsi&keyword=Peyton%20Manning&keyword=Seahawks&keyword=Cheerios&start=1390599844&end=1390938192&binwidth=120",
+                    dataType : "jsonp",
+                    success : function(response){
+                        var data_s = Object.keys(response).map(function(d,i){ 
+                            return {
+                                key: d,
+                                sentiment: true,
+                                values: response[d].map(function(point){ 
+                                    return {
+                                        x: new Date(point[0]*1000),
+                                        y: point[1]
+                                }})
+                        }});
+
+
+                        data = data.concat(data_s);
+                        console.log(data);
+                        nv.addGraph(function() {
+                          var chart = nv.models.timelineAndSentimentChart();
+                        
+                          chart.yAxis
+                              .tickFormat(d3.format('f'));
+                          chart.y2Axis
+                              .tickFormat(d3.format(',.2f'));
+                        
+                              chart.controlCB(function(){
+                                  alert('This is the control function in html');
+                              });
+                              
+                              chart.showControls(true);
+                              chart.controlsData([
+                                //{key:'Count1', disabled:false, onClick: function(){alert('In count1');}}, 
+                                {key:'Count1', disabled:false}, 
+                                {key:'Percent1', disabled:true, onClick: function(){alert('In percent1');}}]);
+                        
+                                //TEST//chart.margin({top: 60, right: 80, bottom: 80, left: 80});
+                                chart.chartTitle("Pre-Superbowl");
+                        
+                                chart.yAxisLabel("Engagement Share")
+                                    .y4AxisLabel("Total Engagements")
+                                    .y3AxisLabel("+ve sentiment")
+                                    //.color([d3.scale.category20().range()[0], d3.scale.category20().range()[2], d3.scale.category20().range()[6]])
+                                    .color(["#FF0F00","#FF6600","#FF9E01","#04D215","#0D8ECF","#0D52D1","#2A0CD0","#8A0CCF","#CD0D74","#754DEB","#DDDDDD","#999999","#333333","#000000"])
+                                    ;
+                        
+                                chart.extentThreshold(58570*2);
+                                chart.plotCumulativeArea(true);
+                        
+                          d3.select('#chart svg')
+                              //.datum(testData())
+                              .datum(data)
+                              .call(chart);
+                        
+                          nv.utils.windowResize(chart.update);
+                        
+                          return chart;
+                        });
+                    }
+                });
+            }
+        });
+    });
+
+
+
+
+function testData() {
+  //return stream_layers(3,128,.1).map(function(data, i) {
+  //WORK//return stream_layers(3,4,.1).map(function(data, i) {
+  //WORK//  return { 
+  //WORK//    key: 'Stream' + i,
+  //WORK//    values: data
+  //WORK//  };
+  //WORK//});
+
+  //GOLD//return {
+  //GOLD//    timeline : stream_layers(3,128,.1).map(function(data, i) {
+  //GOLD//        return {
+  //GOLD//            key: 'Stream' + i,
+  //GOLD//            values: data
+  //GOLD//        };
+  //GOLD//    }),
+  //GOLD//    sentiment : stream_layers1(3,128,.1).map(function(data, i) {
+  //GOLD//        return {
+  //GOLD//            key: 'Stream' + i,
+  //GOLD//            values: data
+  //GOLD//        };
+  //GOLD//    })
+  //GOLD//};
+
+  //NEW_GOLD//var data = stream_layers(3,128,.1).map(function(data, i) {
+  //NEW_GOLD//              return {
+  //NEW_GOLD//                  key: 'Stream' + i,
+  //NEW_GOLD//                  values: data
+  //NEW_GOLD//              };
+  //NEW_GOLD//          });
+
+  //NEW_GOLD//var sentiment = stream_layers1(3,128,.1).map(function(data, i) {
+  //NEW_GOLD//                  return {
+  //NEW_GOLD//                      key: 'Stream' + i,
+  //NEW_GOLD//                      sentiment : "true",
+  //NEW_GOLD//                      values: data
+  //NEW_GOLD//                  };
+  //NEW_GOLD//              });
+
+  var data = stream_layers_date(3,48,.1).map(function(data, i) {
+                var keyName;
+                if(i==0) keyName = "Kohl's";
+                if(i==1) keyName = "Jennifer Lopez";
+                if(i==2) keyName = "Pepsi";
+                return {
+                    //key: 'Stream' + i,
+                    key: keyName,
+                    values: data
+                };
+            });
+
+  var sentiment = stream_layers1_date(3,48,.1).map(function(data, i) {
+                var keyName;
+                if(i==0) keyName = "Kohl's";
+                if(i==1) keyName = "Jennifer Lopez";
+                if(i==2) keyName = "Pepsi";
+                    return {
+                        //key: 'Stream' + i,
+                        key: keyName,
+                        sentiment : "true",
+                        values: data
+                    };
+                });
+
+    console.log(data.concat(sentiment));
+
+  return data.concat(sentiment);
+}
+
+
+</script>

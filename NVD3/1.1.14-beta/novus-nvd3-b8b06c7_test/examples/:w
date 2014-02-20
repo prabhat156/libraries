@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<link href="../src/nv.d3.css" rel="stylesheet" type="text/css">
+
+<style>
+
+body {
+  overflow-y:scroll;
+}
+
+text {
+  font: 12px sans-serif;
+}
+
+svg {
+  display: block;
+}
+
+#chart1 svg {
+  height: 600px;
+  min-width: 100px;
+  min-height: 100px;
+/*
+  margin: 50px;
+  Minimum height and width is a good idea to prevent negative SVG dimensions...
+  For example width should be =< margin.left + margin.right + 1,
+  of course 1 pixel for the entire chart would not be very useful, BUT should not have errors
+*/
+}
+
+</style>
+<body>
+
+  <div id="chart" class='with-3d-shadow with-transitions'>
+    <svg style="height: 600px;"></svg>
+  </div>
+
+<script src="../lib/d3.v3.js"></script>
+<script src="../nv.d3.js"></script>
+<script src="../src/tooltip.js"></script>
+<script src="../src/utils.js"></script>
+<script src="../src/models/legend.js"></script>
+<script src="../src/models/axis.js"></script>
+<script src="../src/models/scatter.js"></script>
+<script src="../src/models/line.js"></script>
+<script src="../src/models/groupedArea.js"></script>
+<script src="../src/models/stackedArea.js"></script>
+<script src="../src/models/stackedAreaNew.js"></script>
+<script src="../src/models/timelineAndSentimentChart_overlay_area.js"></script>
+<script src="stream_layers.js"></script>
+<script>
+
+
+    // Test code
+    var test_timeline = {"ABC": [[23, 103], [32, 62], [48, 99]], "DEF": [[24, 123], [33, 22], [49, 11]], "GHI": [[25, 121], [34, 39], [50, 100]]};
+    var test_events = {"ABC": [[23, 'event1']], "DEF": [[33, 'event21'], [49, 'event22']], "GHI": [[50, 'event3']]};
+
+    var test_data = Object.keys(test_timeline).map(function(brand, i){
+        return {
+            key: brand,
+            values: test_timeline[brand].map(function(point){ 
+                return{
+                    x: point[0],
+                    y: point[1]
+                } 
+            })
+        }
+    });
+
+
+    //GOLD//var test_marker_data = Object.keys(test_events).map(function(brand, i){ 
+    //GOLD//    return {
+    //GOLD//        key: brand,
+    //GOLD//        event: true,
+    //GOLD//        values: test_events[brand].map(function(point){
+    //GOLD//            return {
+    //GOLD//                x: point[0],
+    //GOLD//                e: point[1],
+    //GOLD//                y: test_timeline[brand].filter(function(refpoint){
+    //GOLD//                    return refpoint[0] == point[0];
+    //GOLD//                })[0][1]
+    //GOLD//            }
+    //GOLD//        })
+    //GOLD//    }
+    //GOLD//});
+    var test_marker_data = Object.keys(test_events).map(function(brand, i){ 
+        return {
+            key: brand,
+            event: true,
+            values: test_events[brand].map(function(point){
+                return {
+                    x: point[0],
+                    e: point[1],
+                    y: test_data[i].values.filter(function(refpoint){ return refpoint.x == point[0]; })[0].y
+                }
+            })
+        }
+    });
+    // End test code
+
+    // Data for chart.
+    var timelineData = d3.range(3).map(function(d,i){
+                        var keyName;
+                        if(i==0) keyName = 'Pepsi';
+                        if(i==1) keyName = 'Coke';
+                        if(i==2) keyName = 'Limca';
+                        return {
+                            key: keyName,
+                            timeline: true,
+                            values: d3.range(48).map(function(d,i){ 
+                                return {x: d3.time.minute.offset(new Date(2012, 1, 1, 12, 0), i*5), y: 100*Math.random()}})
+                        }
+                    });
+
+    timelineData.forEach(function(series, i){
+        var val1 = Math.round(47*Math.random());
+        var val2 = Math.round(47*Math.random());
+        console.log('VAL1: ' + val1 + ' VAL2: ' + val2);
+        series.values.forEach(function(point, j){
+            if(j==val1 || j==val2){
+                point.events = ['Pepsi30', 'Pepsi_60'];
+            }
+        });
+    });
+
+    var sentimentData = d3.range(3).map(function(d,i){
+                        var keyName;
+                        if(i==0) keyName = 'Pepsi';
+                        if(i==1) keyName = 'Coke';
+                        if(i==2) keyName = 'Limca';
+                        return {
+                            key: keyName,
+                            sentiment: true,
+                            values: d3.range(48).map(function(d,i){ 
+                                return {x: d3.time.minute.offset(new Date(2012, 1, 1, 12, 0), i*5), y: Math.random()}})
+                        }
+                    });
+
+    var eventsData = timelineData.map(function(d){
+                        return {
+                            key: d.key,
+                            event: true,
+                            values: d.values.filter(function(point){ return point.events})
+                        }
+                    });
+
+    eventsData.forEach(function(series){
+        var temp = series.values.map(function(d){
+            return d.events.map(function(dd, i){
+                return {
+                    x: d.x,
+                    y: d.y,
+                    label: dd,
+                    offset: i
+                }
+            });
+
+        });
+        series.values = d3.merge(temp);
+    });
+
+    var gameEventsData = d3.range(1).map(function(d){
+        return {
+            key: 'Game Events',
+            event: true,
+            disabled: false,
+            values: d3.range(3).map(function(d){
+                return {
+                    x: timelineData[0].values[Math.round(47*Math.random())].x,
+                    y: -1,
+                    events: ['Game1', 'Game2']
+                }
+            })
+        }
+    });
+    gameEventsData.forEach(function(series){
+        var temp = series.values.map(function(d){
+            return d.events.map(function(dd, i){
+                return {
+                    x: d.x,
+                    y: d.y,
+                    label: dd,
+                    offset: i
+                }
+            });
+
+        });
+        series.values = d3.merge(temp);
+    });
+    console.log(gameEventsData);
+
+    eventsData = eventsData.concat(gameEventsData);
+    var segmentData = [{segment: true, values: d3.range(3).map(function(d, i){
+            var label;
+            if(i==0) label = 'Pre-Game';
+            if(i==1) label = 'Q1'; 
+            if(i==2) label = 'Q2'; 
+            if(i<2){
+                return {
+                    x: timelineData[0].values[Math.round((i+1)*timelineData[0].values.length/3)].x,
+                    label: label
+                }
+                } else {
+                return {
+                    x: timelineData[0].values[timelineData[0].values.length-1].x,
+                    label: label
+                }
+            }
+    })}];
+    console.log(segmentData);
+
+    var plotData = timelineData.concat(sentimentData, eventsData, segmentData);
+
+    console.log(plotData);
+
+    $(document).ready(function(){
+        $.ajax({
+            url: "",
+            dataType: "jsonp",
+            success: function(response){
+                // Do something if you want
+                $.ajax({
+                    url: "",
+                    dataType: "jsonp",
+                    success: function(){
+                    }
+                });
+            }
+        });
+    });
+
+
+nv.addGraph(function() {
+  var chart = nv.models.timelineAndSentimentChart();
+
+  //OLD//chart.forceY([0]);
+ // chart.transitionDuration(500);
+  //GOLD//chart.xAxis
+  //GOLD//    //.tickFormat(d3.format(',f'));
+  //GOLD//    //.tickFormat(d3.time.format('%H:%M:%S'));
+  //GOLD//    .tickFormat(d3.time.scale().tickFormat());
+  //GOLD//chart.x2Axis
+  //GOLD//    //.tickFormat(d3.format(',f'));
+  //GOLD//    //.tickFormat(d3.time.format('%H:%M:%S'));
+  //GOLD//    .tickFormat(d3.time.scale().tickFormat());
+
+  chart.yAxis
+      .tickFormat(d3.format('f'));
+  chart.y2Axis
+      .tickFormat(d3.format(',.2f'));
+
+      chart.controlCB(function(){
+          alert('This is the control function in html');
+      });
+      
+      chart.showControls(true);
+      chart.controlsData([
+        //{key:'Count1', disabled:false, onClick: function(){alert('In count1');}}, 
+        {key:'Count1', disabled:false}, 
+        {key:'Percent1', disabled:true, onClick: function(){alert('In percent1');}}]);
+
+        //TEST//chart.margin({top: 60, right: 80, bottom: 80, left: 80});
+        chart.chartTitle("Timeline Test Chart");
+
+        chart.yAxisLabel("Volume")
+            .y3AxisLabel("+ve sentiment")
+            .color([d3.scale.category20().range()[0], d3.scale.category20().range()[2], d3.scale.category20().range()[6], d3.scale.category20().range()[12]])
+            ;
+
+        //chart.extentThreshold(58570*5);
+        chart.plotCumulativeArea(true);
+        chart.plotMarkers(true);
+        chart.plotSegments(true);
+
+  d3.select('#chart svg')
+      //.datum(testData())
+      .datum(plotData)
+      .call(chart);
+
+  nv.utils.windowResize(chart.update);
+
+  return chart;
+});
+
+
+
+function testData() {
+  //return stream_layers(3,128,.1).map(function(data, i) {
+  //WORK//return stream_layers(3,4,.1).map(function(data, i) {
+  //WORK//  return { 
+  //WORK//    key: 'Stream' + i,
+  //WORK//    values: data
+  //WORK//  };
+  //WORK//});
+
+  //GOLD//return {
+  //GOLD//    timeline : stream_layers(3,128,.1).map(function(data, i) {
+  //GOLD//        return {
+  //GOLD//            key: 'Stream' + i,
+  //GOLD//            values: data
+  //GOLD//        };
+  //GOLD//    }),
+  //GOLD//    sentiment : stream_layers1(3,128,.1).map(function(data, i) {
+  //GOLD//        return {
+  //GOLD//            key: 'Stream' + i,
+  //GOLD//            values: data
+  //GOLD//        };
+  //GOLD//    })
+  //GOLD//};
+
+  //NEW_GOLD//var data = stream_layers(3,128,.1).map(function(data, i) {
+  //NEW_GOLD//              return {
+  //NEW_GOLD//                  key: 'Stream' + i,
+  //NEW_GOLD//                  values: data
+  //NEW_GOLD//              };
+  //NEW_GOLD//          });
+
+  //NEW_GOLD//var sentiment = stream_layers1(3,128,.1).map(function(data, i) {
+  //NEW_GOLD//                  return {
+  //NEW_GOLD//                      key: 'Stream' + i,
+  //NEW_GOLD//                      sentiment : "true",
+  //NEW_GOLD//                      values: data
+  //NEW_GOLD//                  };
+  //NEW_GOLD//              });
+
+  var data = stream_layers_date(3,48,.1).map(function(data, i) {
+                var keyName;
+                if(i==0) keyName = "Kohl's";
+                if(i==1) keyName = "Jennifer Lopez";
+                if(i==2) keyName = "Pepsi";
+                return {
+                    //key: 'Stream' + i,
+                    key: keyName,
+                    timeline: "true",
+                    values: data
+                };
+            });
+
+  var sentiment = stream_layers1_date(3,48,.1).map(function(data, i) {
+                var keyName;
+                if(i==0) keyName = "Kohl's";
+                if(i==1) keyName = "Jennifer Lopez";
+                if(i==2) keyName = "Pepsi";
+                    return {
+                        //key: 'Stream' + i,
+                        key: keyName,
+                        sentiment : "true",
+                        values: data
+                    };
+                });
+
+    var events = data.map(
+        function(d){ 
+                var val1 = Math.round(47*Math.random());
+                var val2 = Math.round(47*Math.random());
+                var val3 = Math.round(47*Math.random());
+
+            return {
+                key: d.key,
+                event: true,
+                values: d.values.filter(function(d,i){
+                    return i==val1 || i==val2 || i==val3;
+                })
+            }
+        });
+
+        var game_period = [{segment: true, values: d3.range(2).map(function(d, i){
+                var label;
+                if(i==0) label = 'Pre-Game';
+                if(i==1) label = 'Q1'; 
+                return {
+                    x: data[0].values[Math.round((i+1)*data[0].values.length/3)].x,
+                    label: label
+                }
+        })}];
+
+
+  return data.concat(sentiment, events, game_period);
+}
+
+
+</script>
