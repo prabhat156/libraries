@@ -87,6 +87,7 @@ nv.addGraph(function() {
             ;
 
         //chart.extentThreshold(58570*5);
+        chart.plotSentiment(false);
 
   d3.select('#chart svg')
       .datum(testData())
@@ -146,6 +147,7 @@ function testData() {
                 return {
                     //key: 'Stream' + i,
                     key: keyName,
+                    timeline: "true",
                     values: data
                 };
             });
@@ -164,6 +166,7 @@ function testData() {
                 });
 
   return data.concat(sentiment);
+  //return data;
 }
 
 
