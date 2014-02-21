@@ -5,7 +5,7 @@ nv.models.multiBarGroupChart = function() {
   // Public Variables with Default Settings
   //------------------------------------------------------------
 
-  var multibar = nv.models.multiBar()
+  var multibar = nv.models.multiBarGroup()
     , xAxis = nv.models.axis()
     , yAxis = nv.models.axis()
     , legend = nv.models.legend()
@@ -417,7 +417,7 @@ nv.models.multiBarGroupChart = function() {
   chart.yAxis = yAxis;
 
   d3.rebind(chart, multibar, 'x', 'y', 'xDomain', 'yDomain', 'xRange', 'yRange', 'forceX', 'forceY', 'clipEdge',
-   'id', 'stacked', 'stackOffset', 'delay', 'barColor','groupSpacing');
+   'id', 'stacked', 'stackOffset', 'delay', 'barColor','groupSpacing', 'valueFormat', 'getY0');
 
   chart.options = nv.utils.optionsFunc.bind(chart);
   
