@@ -4586,10 +4586,8 @@ nv.models.logDiscreteBarPlusLineChartPan = function() {
     , y2Axis = nv.models.axis()
     , zoom = d3.behavior.zoom()
     , legend = nv.models.legend()
-    //WORKING//, interactiveLayer = nv.interactiveGuideline()
+    , interactiveLayer = nv.interactiveGuideline()
     ;
-
-  //discretebar.xRange([0, 9000], .1);
 
   var margin = {top: 60, right: 10, bottom: 50, left: 60}
     , width = null
@@ -4624,7 +4622,9 @@ nv.models.logDiscreteBarPlusLineChartPan = function() {
     , xAxisLabelStyle = "font-size:18px"
     , yAxisLabelStyle = "text-anchor:middle;font-size:18px;"
     , y2AxisLabelStyle = "text-anchor:middle;font-size:18px"
-    //WORKING//, useInteractiveGuideLine = true
+    , useInteractiveGuideLine = true
+    , zoomXTranslate=0
+    , barWidthThreshold = 30
     ;
 
   xAxis
@@ -4677,6 +4677,7 @@ nv.models.logDiscreteBarPlusLineChartPan = function() {
   // Private Variables
   //------------------------------------------------------------
 
+  // This is now handled by interactive layer, the this function is not required now
   var showTooltip = function(e, offsetElement, linePoints) {
     // Get the current translation position
     var t = zoom.translate(),
@@ -4727,14 +4728,6 @@ nv.models.logDiscreteBarPlusLineChartPan = function() {
           availableHeight = (height || parseInt(container.style('height')) || 400)
                              - margin.top - margin.bottom;
 
-        // PK : Code Added
-        //var plotWidth = 4000;
-        discretebar.xRange([0, plotWidth], .1);
-        var tempPadding = lines.scatter.padDataOuter();
-        lines.scatter.xRange([(plotWidth * tempPadding +  plotWidth) / (2 *data[0].values.length), plotWidth - plotWidth * (1 + tempPadding) / (2 * data[0].values.length)  ]);
-        //console.log('AW: ' + availableWidth + ' AH: ' + availableHeight);
-        // PK : Coded added end
-  
       chart.update = function() { 
         dispatch.beforeUpdate(); 
         container.transition().duration(transitionDuration).call(chart); 
@@ -4763,6 +4756,20 @@ nv.models.logDiscreteBarPlusLineChartPan = function() {
       }
 
       //------------------------------------------------------------
+      // Setting up the correct scale
+      // Also make sure whether Panning is required or not
+      plotWidth = availableWidth;
+      var barWidth = (1-0.1)*plotWidth/(data[0].values.length+0.1);
+      if(barWidth < barWidthThreshold){
+          plotWidth = (data[0].values.length+0.1)*barWidthThreshold/(1-0.1);
+          plotWidth = Math.round(plotWidth);
+      }
+
+      discretebar.xRange([0, plotWidth], .1);
+      var tempPadding = lines.scatter.padDataOuter();
+      lines.scatter.xRange([(plotWidth * tempPadding +  plotWidth) / (2 *data[0].values.length), plotWidth - plotWidth * (1 + tempPadding) / (2 * data[0].values.length)  ]);
+      //------------------------------------------------------------
+ 
 
       //===================================================================
       // Add Chart Title
@@ -4782,6 +4789,10 @@ nv.models.logDiscreteBarPlusLineChartPan = function() {
       //------------------------------------------------------------
       // Setup Scales
 
+      // Insert a series index to pick the correct color.
+      data.forEach(function(series, i){
+          series.seriesIndex = i
+      });
       var dataBars = data.filter(function(d){ return !d.disabled && d.bar});
       var dataLines = data.filter(function(d){ return !d.disabled && !d.bar});
 
@@ -4789,8 +4800,6 @@ nv.models.logDiscreteBarPlusLineChartPan = function() {
       y = discretebar.yScale()
           .clamp(true)
           ;
-
-      //y2 = discretebar.yScale().clamp(true);
       y2 = lines.yScale();
 
       //------------------------------------------------------------
@@ -4812,7 +4821,7 @@ nv.models.logDiscreteBarPlusLineChartPan = function() {
       gEnter.append('g').attr('class', 'nv-barsWrap');
       gEnter.append('g').attr('class', 'nv-y2 nv-axis');
       gEnter.append('g').attr('class', 'nv-linesWrap');
-      //WORKING//gEnter.append('g').attr('class', 'nv-interactive');
+      gEnter.append('g').attr('class', 'nv-interactive');
       // LEGEND
       gEnter.append('g').attr('class', 'nv-legendWrap');
       
@@ -4850,18 +4859,19 @@ nv.models.logDiscreteBarPlusLineChartPan = function() {
 
       }
 
-      //WORKING//// enable the interactive layer
-      //WORKING//if(useInteractiveGuideLine){
-      //WORKING//    interactiveLayer
-      //WORKING//          .width(XXX)
-      //WORKING//          .height(XXX)
-      //WORKING//          .margin(XXX)
-      //WORKING//          .svgContainer(XXX)
-      //WORKING//          .xScale(XXX);
+      // enable the interactive layer
+      if(useInteractiveGuideLine){
+          interactiveLayer
+                .width(availableWidth)
+                .height(availableHeight)
+                .margin({left:margin.left, top:margin.top})
+                .svgContainer(container)
+                //.xScale(x);
+                .xScale(lines.xScale());
 
-      //WORKING//    g.select().call(interactiveLayer);
+          g.select('.nv-interactive').call(interactiveLayer);
 
-      //WORKING//}
+      }
       //------------------------------------------------------------
       // Main Chart Component(s)
 
@@ -4932,15 +4942,6 @@ nv.models.logDiscreteBarPlusLineChartPan = function() {
           .attr('x', '0')
           .attr('y', '0');
       
-      //// Define the clip path for the lines
-      //defsEnter.append('clipPath')
-      //    .attr('id', 'nv-line-clip-rect')
-      //  .append('rect')
-      //    .attr('width', availableWidth)
-      //    .attr('height', availableHeight)
-      //    .attr('x', '0')
-      //    .attr('y', '0');
-
       defsEnter.append('clipPath')
           .attr('id', 'new-x-clip-rect')
         .append('rect')
@@ -5012,7 +5013,8 @@ nv.models.logDiscreteBarPlusLineChartPan = function() {
       }
 
       if (showYAxis) {
-          y.nice();
+          // y.nice() here will have issues. I noticed that in timelinecharts
+          //y.nice();
           yAxis
             .scale(y)
             .ticks( availableHeight / 36 )
@@ -5034,7 +5036,7 @@ nv.models.logDiscreteBarPlusLineChartPan = function() {
       }
 
       if (showY2Axis) {
-          y2.nice();
+          //y2.nice();
           y2Axis
             .scale(y2)
             .ticks( availableHeight / 36 )
@@ -5074,6 +5076,7 @@ nv.models.logDiscreteBarPlusLineChartPan = function() {
       // Panning feature in the chart (without Zoom)
       //============================================================
       zoom
+          // Disable 'zoom' feature, just use the 'pan' feature
           .scaleExtent([1,1])
           .on("zoom", zoomResponse);
       
@@ -5084,17 +5087,6 @@ nv.models.logDiscreteBarPlusLineChartPan = function() {
       //TESTING////GOLD//// THIS WAS THE GOLD IMPLEMENATION
       //TESTING////GOLD//var gZoom = g.select('.nv-barsWrap')
       //TESTING////GOLD//             .call(zoom);
-     
-      //TESTING//console.log(this.parentNode);
-
-      //TESTING//// THIS IS JUST A TEST
-      //TESTING////var gZoom = container.select('g.nvd3.nv-wrap.nv-discreteBarWithAxes')
-      //TESTING////var gZoom = d3.select("#chart1 svg").select('g.nvd3.nv-wrap.nv-discreteBarWithAxes')
-      //TESTING//var gZoom = d3.select(this.parentNode)
-      //TESTING//             .call(zoom);
-      //TESTING////WORKING//var gZoom = d3.select('#chart1')
-      //TESTING////WORKING//              .call(zoom);
-
       //============================================================
 
       //============================================================
@@ -5112,47 +5104,85 @@ nv.models.logDiscreteBarPlusLineChartPan = function() {
         if (tooltips) showTooltip(e, that.parentNode, linePoints);
       });
 
-      //WORKING//// Adding the interactive layer here
-      //WORKING//interactiveLayer.dispatch.on('elementMouseover', function(e){
-      //WORKING//    var singlePoint, pointIndex, pointXLocation, allData = [];
+      // Add an interactive layer to display y-values for both the 'bar' and 'line'
+      interactiveLayer.dispatch.on('elementMousemove', function(e){
+          var singlePoint, pointIndex, pointXLocation, allData = [];
 
-      //WORKING//    // Bars data
-      //WORKING//    dataBars
-      //WORKING//      .filter(function())
-      //WORKING//      .forEach();
-      //WORKING//    // Line data
-      //WORKING//});
+          // Compensate for the Panning feature of the chart
+          var tx = zoom.translate()[0];
+          tx = Math.min(tx, 0);
+          // 'lines' range doesnt start with 0, so the following line will compensate for that offset
+          var lines_os = lines.scatter.xRange()[0];
+          tx += lines_os;
 
-      //TEST//dispatch.on('tooltipShow', function(e, flag) {
+          // Line data
+          dataLines
+            .filter(function(series, i){
+                return !series.disabled
+            })
+            .map(function(series, i){
+                return {
+                    key: series.key,
+                    seriesIndex: series.seriesIndex,
+                    values: series.values.map(function(d,i){ return {x:i, y:d.value} })
+                }
+            })
+            .forEach(function(series, i){
+                pointIndex = nv.interactiveBisect(series.values, e.pointXValue-lines.xScale().invert(tx), lines.x());
 
-      //TEST//    if(flag) {
-      //TEST//      var linePoints = dataLines.map(function(d){
-      //TEST//                    return {
-      //TEST//                        key : d.key,
-      //TEST//                        values : {x: e.pointIndex, y: d.values[e.pointIndex]}
-      //TEST//                        }
-      //TEST//                    });
-      //TEST//    } else {
-      //TEST//      var dataPoints = dataBars.map(function(d){
-      //TEST//                    return {
-      //TEST//                        key : d.key,
-      //TEST//                        values : {x: e.pointIndex, y: d.values[e.pointIndex]}
-      //TEST//                        }
-      //TEST//                    });
-      //TEST//    }
+                var point = series.values[pointIndex];
 
+                if(typeof point === 'undefined') return;
+                if(typeof singlePoint === 'undefined') singlePoint = point;
+                if(typeof pointXLocation == 'undefined') pointXLocation = lines.xScale()(lines.x()(point, pointIndex));
 
-      //TEST//    //console.log('DDDD: ' + JSON.stringify(e));
-      //TEST//    console.log('FLAGLLL : ' + flag);
-      //TEST//    var linePoints = dataLines.map(function(d){
-      //TEST//                  return {
-      //TEST//                      key : d.key,
-      //TEST//                      values : {x: e.pointIndex, y: d.values[e.pointIndex]}
-      //TEST//                      }
-      //TEST//                  });
+                var tooltipValue = lines.y()(point, pointIndex);
+                allData.push({
+                    key: series.key,
+                    value: y2Axis.tickFormat()(tooltipValue),
+                    color: color(series, series.seriesIndex)
+                });
+            });
 
-      //TEST//  if (tooltips) showTooltip(e, that.parentNode, linePoints);
-      //TEST//});
+          // Bars data, This is kind-of dependent on the above call
+          dataBars
+            .filter(function(series, i){
+                return !series.disabled
+            })
+            .forEach(function(series, i){
+                // if the point was 'undefined' the function would have returned above. It wont even reach here
+                var point = series.values[pointIndex];
+                singlePoint = point;
+
+                var tooltipValue = discretebar.y()(point, pointIndex);
+                allData.push({
+                    key: series.key,
+                    value: d3.format('f')(tooltipValue),
+                    color: color(series, series.seriesIndex)
+                });
+            });
+         
+          var xValue = discretebar.x()(singlePoint, pointIndex);
+          //DONT NEED THIS//var valueFormatter = function(d, i){ return y2Axis.tickFormat()(d)};
+
+          // Reverse the order of 'allData' to make sure bars are displayed first
+          allData.reverse();
+          interactiveLayer.tooltip
+              .position({left: (pointXLocation+tx-lines_os)+margin.left, top:e.mouseY+margin.top})
+              .chartContainer(that.parentNode)
+              .enabled(tooltips)
+              //DONT NEET THIS//.valueFormatter(valueFormatter)
+              .data({
+                  value: xValue,
+                  series: allData
+              })();
+
+          interactiveLayer.renderGuideLine(pointXLocation+tx-lines_os);
+      });
+
+      interactiveLayer.dispatch.on("elementMouseout", function(e){
+          dispatch.tooltipHide();
+      });
 
       //TODO//legend.dispatch.on('stateChange', function(newState){
       //TODO//    chart.update();
@@ -5203,25 +5233,25 @@ nv.models.logDiscreteBarPlusLineChartPan = function() {
   // Event Handling/Dispatching (out of chart's scope)
   //------------------------------------------------------------
 
-  discretebar.dispatch.on('elementMouseover.tooltip', function(e) {
-    e.pos = [e.pos[0] +  margin.left, e.pos[1] + margin.top];
-    dispatch.tooltipShow(e, false);
-  });
+  //NEW CODE ABOVE//discretebar.dispatch.on('elementMouseover.tooltip', function(e) {
+  //NEW CODE ABOVE//  e.pos = [e.pos[0] +  margin.left, e.pos[1] + margin.top];
+  //NEW CODE ABOVE//  dispatch.tooltipShow(e, false);
+  //NEW CODE ABOVE//});
 
-  // TODO Enable this later
-  //lines.dispatch.on('elementMouseover.tooltip', function(e) {
-  //  e.pos = [e.pos[0] +  margin.left, e.pos[1] + margin.top];
-  //  dispatch.tooltipShow(e, true);
-  //});
+  //NEW CODE ABOVE//// TODO Enable this later
+  //NEW CODE ABOVE////lines.dispatch.on('elementMouseover.tooltip', function(e) {
+  //NEW CODE ABOVE////  e.pos = [e.pos[0] +  margin.left, e.pos[1] + margin.top];
+  //NEW CODE ABOVE////  dispatch.tooltipShow(e, true);
+  //NEW CODE ABOVE////});
 
-  discretebar.dispatch.on('elementMouseout.tooltip', function(e) {
-    dispatch.tooltipHide(e, false);
-  });
+  //NEW CODE ABOVE//discretebar.dispatch.on('elementMouseout.tooltip', function(e) {
+  //NEW CODE ABOVE//  dispatch.tooltipHide(e, false);
+  //NEW CODE ABOVE//});
  
-  // TODO Enable this later 
-  //lines.dispatch.on('elementMouseout.tooltip', function(e) {
-  //  dispatch.tooltipHide(e, true);
-  //});
+  //NEW CODE ABOVE//// TODO Enable this later 
+  //NEW CODE ABOVE////lines.dispatch.on('elementMouseout.tooltip', function(e) {
+  //NEW CODE ABOVE////  dispatch.tooltipHide(e, true);
+  //NEW CODE ABOVE////});
 
   dispatch.on('tooltipHide', function() {
     if (tooltips) nv.tooltip.cleanup();
