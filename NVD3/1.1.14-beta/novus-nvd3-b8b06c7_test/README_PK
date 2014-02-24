@@ -1,12 +1,15 @@
-There are 4 new additions to the library:
-1. logDiscreteBarPlusLineChartPan : Bar chart coupled with line chart. This has the Panning feature but its 'on' by default. Need to make it more configurable. Dependency : logDiscreteBar
+There are 5 new additions to the library:
+1. logDiscreteBarPlusLineChartPan : Bar chart coupled with line chart. Dependency : logDiscreteBar
 2. timelineAndSentimentChart : Timeline chart with sentiment chart embedded. The x-axis is time-scale. It is a master-detail with brush feature. Flagging is not yet working and available. 
 3. multiBarStackGroupChart : Bar chart which supports Stacking and Grouping. You can enable the value display for all or specific series. Dependency : multiBarStackGroup. Note this is a horizontal chart
 4. heatmapChart : The is the basic version of heatmap. Needs more modifications. Dependency : heatmap.
-5. multiBarGroupChart : This chart creates a group of bar charts. I believe the same thing can be achieved with Stack and Group chart with number of stacks equal to number of groups. Dependency : multiBar. Note this is a vertical chart so probably Stack and Group chart cant be used so easily.
+5. multiBarGroupChart : This chart creates a group of bar charts. I believe the same thing can be achieved with Stack and Group chart with number of stacks equal to number of groups. Dependency : multiBar. Note this is a vertical chart so probably Stack and Group chart cant be used so easily. Similar to 3, you can enable external value display for specific series.
 
 TODO:
-1. The charts still dont resize the chart area based on the length of the axis if the axis is ordinal and string. Need to figure out how that can be done. 
-2. I used interactive layer in 'stack and group' bar chart. I need to do the same thing for 'bar + line' chart. Need to modify the tooltip display for timeline, so that either it has sections of timeline data and sentiment data 'OR' a different column for the sentiment data, whichever is more convenient.
+1. The charts still dont resize the chart area based on the length of the axis if the axis is ordinal and string. Need to figure out how that can be done. This is when the ordinal text is too long. 
+2. Need to modify the tooltip display for timeline, so that either it has sections of timeline data and sentiment data 'OR' a different column for the sentiment data, whichever is more convenient.
 3. Need to make heatmaps more configurable. Currently it is not set up as other charts are. Also need mouse events in heatmaps. Further, I need to think about how to implement grouping & sorting feature. 
-4. The Panning feature is on by default. I need to make sure that panning occurs only when the plot area goes big. 
+
+Finished TODOs
+1. The Panning feature is on by default. I need to make sure that panning occurs only when the plot area goes big. 
+2. Added interactive layer to the bar+line chart
