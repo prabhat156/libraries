@@ -6942,20 +6942,20 @@ nv.models.vxLegend = function() {
   // Public Variables with Default Settings
   //------------------------------------------------------------
 
-  var margin = {top: 5, right: 0, bottom: 5, left: 0}
-    , width = 400
-    , height = 20
-    , getKey = function(d) { return d.key }
-    , color = nv.utils.defaultColor()
-    , align = true
-    , orientation = 'top'
-    , rightAlign = true
-    , updateState = true   //If true, legend will update data.disabled and trigger a 'stateChange' dispatch.
-    , radioButtonMode = false   //If true, clicking legend items will cause it to behave like a radio button. (only one can be selected at a time)
-    , dispatch = d3.dispatch('legendClick', 'legendDblclick', 'legendMouseover', 'legendMouseout', 'stateChange')
-    , defaultStyle = 1
-    , legendTextStyle = 'font-family:Helvetica; font-size:12pt; fill:#3c4f54'
-    , getLegendStyle = function(d){ return d.legendStyle || defaultStyle}
+  var margin = {top: 5, right: 0, bottom: 5, left: 0},
+      width = 400,
+      height = 20,
+      getKey = function(d) { return d.key },
+      color = nv.utils.defaultColor(),
+      align = true,
+      orientation = 'top',
+      rightAlign = true,
+      updateState = true   //If true, legend will update data.disabled and trigger a 'stateChange' dispatch.,
+      radioButtonMode = false   //If true, clicking legend items will cause it to behave like a radio button. (only one can be selected at a time),
+      dispatch = d3.dispatch('legendClick', 'legendDblclick', 'legendMouseover', 'legendMouseout', 'stateChange'),
+      defaultStyle = 1,
+      legendTextStyle = 'font-family:Helvetica; font-size:12pt; fill:#3c4f54',
+      getLegendStyle = function(d){ return d.legendStyle || defaultStyle}
     ;
 
   //============================================================
@@ -7437,21 +7437,21 @@ nv.models.vxLegendSmall = function() {
   // Public Variables with Default Settings
   //------------------------------------------------------------
 
-  var margin = {top: 5, right: 0, bottom: 5, left: 0}
-    , width = 400
-    , height = 20
-    , getKey = function(d) { return d.key }
-    , color = nv.utils.defaultColor()
-    , align = true
-    , orientation = 'top'
-    , rightAlign = true
-    , updateState = true   //If true, legend will update data.disabled and trigger a 'stateChange' dispatch.
-    , radioButtonMode = false   //If true, clicking legend items will cause it to behave like a radio button. (only one can be selected at a time)
-    , dispatch = d3.dispatch('legendClick', 'legendDblclick', 'legendMouseover', 'legendMouseout', 'stateChange')
-    , defaultStyle = 1
-    , textStyle = 'font-family:Helvetica; font-size:12pt; fill:#3c4f54'
-    // NOTE: legendStyle = 0 is reserved for SPECIAL cases when I dont want to display the legend but I still need the series
-    , getLegendStyle = function(d){
+  var margin = {top: 5, right: 0, bottom: 5, left: 0},
+      width = 400,
+      height = 20,
+      getKey = function(d) { return d.key },
+      color = nv.utils.defaultColor(),
+      align = true,
+      orientation = 'top',
+      rightAlign = true,
+      updateState = true   //If true, legend will update data.disabled and trigger a 'stateChange' dispatch.,
+      radioButtonMode = false   //If true, clicking legend items will cause it to behave like a radio button. (only one can be selected at a time),
+      dispatch = d3.dispatch('legendClick', 'legendDblclick', 'legendMouseover', 'legendMouseout', 'stateChange'),
+      defaultStyle = 1,
+      textStyle = 'font-family:Helvetica; font-size:12pt; fill:#3c4f54',
+      // NOTE: legendStyle = 0 is reserved for SPECIAL cases when I dont want to display the legend but I still need the series
+      getLegendStyle = function(d){
         //return d.legendStyle || defaultStyle;
 
         if(typeof d.legendStyle === 'undefined'){
@@ -7573,6 +7573,7 @@ nv.models.vxLegendSmall = function() {
           .attr('class','nv-legend-text')
           .attr('dy', '.32em')
           .attr('dx', '14');
+
       // Legend Style 3
       seriesEnter.filter('.nv-legendStyle-3')
           .append('path')
@@ -7979,21 +7980,21 @@ nv.models.vxMarker = function() {
   // Public Variables with Default Settings
   //------------------------------------------------------------
 
-  var margin = {top: 0, right: 0, bottom: 0, left: 0}
-    , width = 400
-    , height = 20
-    , getX = function(d) {return d.x}
-    , getY = function(d) {return d.y}
-    , getKey = function(d) { return d.key }
-    , color = nv.utils.defaultColor()
-    , updateState = true   //If true, legend will update data.disabled and trigger a 'stateChange' dispatch.
-    , radioButtonMode = false   //If true, clicking legend items will cause it to behave like a radio button. (only one can be selected at a time)
-    , dispatch = d3.dispatch('markerClick', 'markerDblclick', 'markerMouseover', 'markerMouseout', 'stateChange')
-    , x
-    , y
-    , pointKey = null
-    , defaultStyle = 2
-    , getMarkerStyle = function(d){ return d.markerStyle || defaultStyle; }
+  var margin = {top: 0, right: 0, bottom: 0, left: 0},
+      width = 400,
+      height = 20,
+      getX = function(d) {return d.x},
+      getY = function(d) {return d.y},
+      getKey = function(d) { return d.key },
+      color = nv.utils.defaultColor(),
+      updateState = true   //If true, legend will update data.disabled and trigger a 'stateChange' dispatch.,
+      radioButtonMode = false   //If true, clicking legend items will cause it to behave like a radio button. (only one can be selected at a time),
+      dispatch = d3.dispatch('markerClick', 'markerDblclick', 'markerMouseover', 'markerMouseout', 'stateChange'),
+      x,
+      y,
+      pointKey = null,
+      defaultStyle = 2,
+      getMarkerStyle = function(d){ return d.markerStyle || defaultStyle; }
     ;
 
   //============================================================
@@ -13090,73 +13091,73 @@ nv.models.timelineAndSentimentChart = function() {
   // Public Variables with Default Settings
   //------------------------------------------------------------
 
-  var lines = nv.models.line()
-    , lines2 = nv.models.line()
-    , lines3 = nv.models.line()
-    , xAxis = nv.models.axis()
-    , yAxis = nv.models.axis()
-    , x2Axis = nv.models.axis()
-    , y2Axis = nv.models.axis()
-    , x3Axis = nv.models.axis()
-    , y3Axis = nv.models.axis()
-    //, legend = nv.models.legend()
-    , legend = nv.models.vxLegendSmall()
-    , controls = nv.models.legend()
-    , brush = d3.svg.brush()
-    , interactiveLayer = nv.interactiveGuideline()
-    , marker = nv.models.vxMarker()
+  var lines = nv.models.line(),
+      lines2 = nv.models.line(),
+      lines3 = nv.models.line(),
+      xAxis = nv.models.axis(),
+      yAxis = nv.models.axis(),
+      x2Axis = nv.models.axis(),
+      y2Axis = nv.models.axis(),
+      x3Axis = nv.models.axis(),
+      y3Axis = nv.models.axis(),
+      //legend = nv.models.legend(),
+      legend = nv.models.vxLegendSmall(),
+      controls = nv.models.legend(),
+      brush = d3.svg.brush(),
+      interactiveLayer = nv.interactiveGuideline(),
+      marker = nv.models.vxMarker()
     ;
 
-  var margin = {top: 80, right: 30, bottom: 40, left: 80}
-    , margin2 = {top: 30, right: 30, bottom: 20, left: 60}
-    , margin3 = {top: 30, right: 30, bottom: 20, left: 60}
-    , dist12 = 20
-    , dist23 = 30
-    , color = nv.utils.defaultColor()
-    , markerColor = nv.utils.defaultColor()
-    , showControls = false
-    , controlsData = null
-    , width = null
-    , height = null
-    , height2 = 80
-    , height3 = 140
-    , heightSentiment = 100
-    , heightContext = 60
-    , x
-    , y
-    , x2
-    , y2
-    , x3
-    , y3
-    , showLegend = true
-    , brushExtent = null
-    , tooltips = true
-    , tooltip = function(key, x, y, e, graph) {
+  var margin = {top: 80, right: 30, bottom: 40, left: 80},
+      margin2 = {top: 30, right: 30, bottom: 20, left: 60},
+      margin3 = {top: 30, right: 30, bottom: 20, left: 60},
+      dist12 = 20,
+      dist23 = 30,
+      color = nv.utils.defaultColor(),
+      markerColor = nv.utils.defaultColor(),
+      showControls = false,
+      controlsData = null,
+      width = null,
+      height = null,
+      height2 = 80,
+      height3 = 140,
+      heightSentiment = 100,
+      heightContext = 60,
+      x,
+      y,
+      x2,
+      y2,
+      x3,
+      y3,
+      showLegend = true,
+      brushExtent = null,
+      tooltips = true,
+      tooltip = function(key, x, y, e, graph) {
         return '<h3>' + key + '</h3>' +
                '<p>' +  y + ' at ' + x + '</p>'
-      }
-    , controlCB = function() {
+      },
+      controlCB = function() {
         alert('This is from callback');
-      }
-    , noData = "No Data Available."
-    , dispatch = d3.dispatch('tooltipShow', 'tooltipHide', 'brush', 'stateChange')
-    , controlWidth = function() {return showControls ? 180 : 0 }
-    , transitionDuration = 250
-    , controlState = true
-    , chartTitle = "Chart"
-    , chartTitleStyle = "font-size:24px"
-    , yAxisLabel = "y-Axis Label"
-    , xAxisLabel = "x-Axis Label"
-    , yAxisLabelStyle = "text-anchor:middle;font-size:18px"
-    , y3AxisLabel = "y3-Axis Label"
-    , y3AxisLabelStyle = "text-anchor:middle;font-size:16px"
-    // 1m ~ 58750, Default is 5 min
-    , extentThreshold = 58750*5
-    , useInteractiveGuideLine = false
-    , plotSentiment = false
-    , plotContext = false
-    , plotMarker = true
-    , markerColorScheme = 'implicit' // This can be 'implicit' or 'explicit'
+      },
+      noData = "No Data Available.",
+      dispatch = d3.dispatch('tooltipShow', 'tooltipHide', 'brush', 'stateChange'),
+      controlWidth = function() {return showControls ? 180 : 0 },
+      transitionDuration = 250,
+      controlState = true,
+      chartTitle = "Chart",
+      chartTitleStyle = "font-size:24px",
+      yAxisLabel = "y-Axis Label",
+      xAxisLabel = "x-Axis Label",
+      yAxisLabelStyle = "text-anchor:middle;font-size:18px",
+      y3AxisLabel = "y3-Axis Label",
+      y3AxisLabelStyle = "text-anchor:middle;font-size:16px",
+      // 1m ~ 58750, Default is 5 min
+      extentThreshold = 58750*5,
+      useInteractiveGuideLine = false,
+      plotSentiment = false,
+      plotContext = false,
+      plotMarker = true,
+      markerColorScheme = 'implicit' // This can be 'implicit' or 'explicit'
     ;
 
   lines
@@ -21567,26 +21568,26 @@ nv.models.vxPieChart = function() {
   // Public Variables with Default Settings
   //------------------------------------------------------------
 
-  var pie = nv.models.pie()
-    , legend = nv.models.vxLegend()
+  var pie = nv.models.pie(),
+      legend = nv.models.vxLegend()
     ;
 
-  var margin = {top: 60, right: 20, bottom: 20, left: 20}
-    , width = null
-    , height = null
-    , showLegend = true
-    , color = nv.utils.defaultColor()
-    , tooltips = true
-    , tooltip = function(key, y, e, graph) {
+  var margin = {top: 60, right: 20, bottom: 20, left: 20},
+      width = null,
+      height = null,
+      showLegend = true,
+      color = nv.utils.defaultColor(),
+      tooltips = true,
+      tooltip = function(key, y, e, graph) {
         return '<h3>' + key + '</h3>' +
                '<p>' +  y + '</p>'
-      }
-    , state = {}
-    , defaultState = null
-    , noData = "No Data Available."
-    , dispatch = d3.dispatch('tooltipShow', 'tooltipHide', 'stateChange', 'changeState')
-    , chartTitle = "Pie-Chart"
-    , chartTitleStyle = "text-anchor:middle;font-size:16pt; fill:#3c4f54; font-weight:normal; font-family:Helvetica"
+      },
+      state = {},
+      defaultState = null,
+      noData = "No Data Available.",
+      dispatch = d3.dispatch('tooltipShow', 'tooltipHide', 'stateChange', 'changeState'),
+      chartTitle = "Pie-Chart",
+      chartTitleStyle = "text-anchor:middle;font-size:16pt; fill:#3c4f54; font-weight:normal; font-family:Helvetica"
     ;
 
   legend
