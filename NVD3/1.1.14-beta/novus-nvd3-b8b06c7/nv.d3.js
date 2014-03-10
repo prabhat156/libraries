@@ -6950,8 +6950,8 @@ nv.models.vxLegend = function() {
       align = true,
       orientation = 'top',
       rightAlign = true,
-      updateState = true   //If true, legend will update data.disabled and trigger a 'stateChange' dispatch.,
-      radioButtonMode = false   //If true, clicking legend items will cause it to behave like a radio button. (only one can be selected at a time),
+      updateState = true,   //If true, legend will update data.disabled and trigger a 'stateChange' dispatch.,
+      radioButtonMode = false,   //If true, clicking legend items will cause it to behave like a radio button. (only one can be selected at a time),
       dispatch = d3.dispatch('legendClick', 'legendDblclick', 'legendMouseover', 'legendMouseout', 'stateChange'),
       defaultStyle = 1,
       legendTextStyle = 'font-family:Helvetica; font-size:12pt; fill:#3c4f54',
@@ -7445,8 +7445,8 @@ nv.models.vxLegendSmall = function() {
       align = true,
       orientation = 'top',
       rightAlign = true,
-      updateState = true   //If true, legend will update data.disabled and trigger a 'stateChange' dispatch.,
-      radioButtonMode = false   //If true, clicking legend items will cause it to behave like a radio button. (only one can be selected at a time),
+      updateState = true,   //If true, legend will update data.disabled and trigger a 'stateChange' dispatch.,
+      radioButtonMode = false,   //If true, clicking legend items will cause it to behave like a radio button. (only one can be selected at a time),
       dispatch = d3.dispatch('legendClick', 'legendDblclick', 'legendMouseover', 'legendMouseout', 'stateChange'),
       defaultStyle = 1,
       textStyle = 'font-family:Helvetica; font-size:12pt; fill:#3c4f54',
@@ -7987,8 +7987,8 @@ nv.models.vxMarker = function() {
       getY = function(d) {return d.y},
       getKey = function(d) { return d.key },
       color = nv.utils.defaultColor(),
-      updateState = true   //If true, legend will update data.disabled and trigger a 'stateChange' dispatch.,
-      radioButtonMode = false   //If true, clicking legend items will cause it to behave like a radio button. (only one can be selected at a time),
+      updateState = true,   //If true, legend will update data.disabled and trigger a 'stateChange' dispatch.,
+      radioButtonMode = false,   //If true, clicking legend items will cause it to behave like a radio button. (only one can be selected at a time),
       dispatch = d3.dispatch('markerClick', 'markerDblclick', 'markerMouseover', 'markerMouseout', 'stateChange'),
       x,
       y,
@@ -8335,9 +8335,9 @@ nv.models.vxMarker = function() {
           pointsEnter.append('circle')
                 .attr('cx', function(d,i){ return x0(getX(d,i)) })
                 .attr('cy', function(d,i){ return y0(getY(d,i)) })
-                .attr('r', 18)
-                .attr('style', "stroke-width:0.5;")
-                .style('fill-opacity', 0.5)
+                .attr('r', 16)
+                .attr('style', "stroke-width:0.4;")
+                .style('fill-opacity', 0.4)
                 ;
           points.exit().remove();
           
