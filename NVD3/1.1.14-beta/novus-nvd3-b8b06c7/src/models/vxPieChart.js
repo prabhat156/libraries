@@ -4,26 +4,26 @@ nv.models.vxPieChart = function() {
   // Public Variables with Default Settings
   //------------------------------------------------------------
 
-  var pie = nv.models.pie()
-    , legend = nv.models.vxLegend()
+  var pie = nv.models.pie(),
+      legend = nv.models.vxLegend()
     ;
 
-  var margin = {top: 60, right: 20, bottom: 20, left: 20}
-    , width = null
-    , height = null
-    , showLegend = true
-    , color = nv.utils.defaultColor()
-    , tooltips = true
-    , tooltip = function(key, y, e, graph) {
+  var margin = {top: 60, right: 20, bottom: 20, left: 20},
+      width = null,
+      height = null,
+      showLegend = true,
+      color = nv.utils.defaultColor(),
+      tooltips = true,
+      tooltip = function(key, y, e, graph) {
         return '<h3>' + key + '</h3>' +
                '<p>' +  y + '</p>'
-      }
-    , state = {}
-    , defaultState = null
-    , noData = "No Data Available."
-    , dispatch = d3.dispatch('tooltipShow', 'tooltipHide', 'stateChange', 'changeState')
-    , chartTitle = "Pie-Chart"
-    , chartTitleStyle = "text-anchor:middle;font-size:16pt; fill:#3c4f54; font-weight:normal; font-family:Helvetica"
+      },
+      state = {},
+      defaultState = null,
+      noData = "No Data Available.",
+      dispatch = d3.dispatch('tooltipShow', 'tooltipHide', 'stateChange', 'changeState'),
+      chartTitle = "Pie-Chart",
+      chartTitleStyle = "text-anchor:middle;font-size:16pt; fill:#3c4f54; font-weight:normal; font-family:Helvetica"
     ;
 
   legend
