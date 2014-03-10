@@ -359,9 +359,9 @@ nv.models.vxMarker = function() {
           pointsEnter.append('circle')
                 .attr('cx', function(d,i){ return x0(getX(d,i)) })
                 .attr('cy', function(d,i){ return y0(getY(d,i)) })
-                .attr('r', 18)
-                .attr('style', "stroke-width:0.5;")
-                .style('fill-opacity', 0.5)
+                .attr('r', 16)
+                .attr('style', "stroke-width:0.4;")
+                .style('fill-opacity', 0.4)
                 ;
           points.exit().remove();
           
