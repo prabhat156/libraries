@@ -4,21 +4,21 @@ nv.models.vxLegendSmall = function() {
   // Public Variables with Default Settings
   //------------------------------------------------------------
 
-  var margin = {top: 5, right: 0, bottom: 5, left: 0}
-    , width = 400
-    , height = 20
-    , getKey = function(d) { return d.key }
-    , color = nv.utils.defaultColor()
-    , align = true
-    , orientation = 'top'
-    , rightAlign = true
-    , updateState = true   //If true, legend will update data.disabled and trigger a 'stateChange' dispatch.
-    , radioButtonMode = false   //If true, clicking legend items will cause it to behave like a radio button. (only one can be selected at a time)
-    , dispatch = d3.dispatch('legendClick', 'legendDblclick', 'legendMouseover', 'legendMouseout', 'stateChange')
-    , defaultStyle = 1
-    , textStyle = 'font-family:Helvetica; font-size:12pt; fill:#3c4f54'
-    // NOTE: legendStyle = 0 is reserved for SPECIAL cases when I dont want to display the legend but I still need the series
-    , getLegendStyle = function(d){
+  var margin = {top: 5, right: 0, bottom: 5, left: 0},
+      width = 400,
+      height = 20,
+      getKey = function(d) { return d.key },
+      color = nv.utils.defaultColor(),
+      align = true,
+      orientation = 'top',
+      rightAlign = true,
+      updateState = true   //If true, legend will update data.disabled and trigger a 'stateChange' dispatch.,
+      radioButtonMode = false   //If true, clicking legend items will cause it to behave like a radio button. (only one can be selected at a time),
+      dispatch = d3.dispatch('legendClick', 'legendDblclick', 'legendMouseover', 'legendMouseout', 'stateChange'),
+      defaultStyle = 1,
+      textStyle = 'font-family:Helvetica; font-size:12pt; fill:#3c4f54',
+      // NOTE: legendStyle = 0 is reserved for SPECIAL cases when I dont want to display the legend but I still need the series
+      getLegendStyle = function(d){
         //return d.legendStyle || defaultStyle;
 
         if(typeof d.legendStyle === 'undefined'){
@@ -140,6 +140,7 @@ nv.models.vxLegendSmall = function() {
           .attr('class','nv-legend-text')
           .attr('dy', '.32em')
           .attr('dx', '14');
+
       // Legend Style 3
       seriesEnter.filter('.nv-legendStyle-3')
           .append('path')
