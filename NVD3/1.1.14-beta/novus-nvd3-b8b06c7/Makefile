@@ -18,6 +18,9 @@ JS_FILES = \
 	src/models/historicalBarChart.js \
 	src/models/indentedTree.js \
 	src/models/legend.js \
+	src/models/vxLegend.js \
+	src/models/vxLegendSmall.js \
+	src/models/vxMarker.js \
 	src/models/line.js \
 	src/models/lineChart.js \
 	src/models/linePlusBarChart.js \
@@ -42,6 +45,7 @@ JS_FILES = \
 	src/models/ohlcBar.js \
 	src/models/pie.js \
 	src/models/pieChart.js \
+	src/models/vxPieChart.js \
 	src/models/scatter.js \
 	src/models/scatterChart.js \
 	src/models/bubbleChart.js \
