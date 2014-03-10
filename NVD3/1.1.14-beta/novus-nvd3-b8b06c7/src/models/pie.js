@@ -37,7 +37,6 @@ nv.models.pie = function() {
           arcRadius = radius-(radius / 5),
           container = d3.select(this);
 
-
       //------------------------------------------------------------
       // Setup containers and skeleton of chart
 
@@ -51,8 +50,18 @@ nv.models.pie = function() {
       gEnter.append('g').attr('class', 'nv-pieLabels');
 
       wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
-      g.select('.nv-pie').attr('transform', 'translate(' + availableWidth / 2 + ',' + availableHeight / 2 + ')');
-      g.select('.nv-pieLabels').attr('transform', 'translate(' + availableWidth / 2 + ',' + availableHeight / 2 + ')');
+      //GOLD//g.select('.nv-pie').attr('transform', 'translate(' + availableWidth / 2 + ',' + availableHeight / 2 + ')');
+      //GOLD//g.select('.nv-pieLabels').attr('transform', 'translate(' + availableWidth / 2 + ',' + availableHeight / 2 + ')');
+
+      // PK : Modification to the placement of the pie
+      if(showLabels){
+          g.select('.nv-pie').attr('transform', 'translate(' + radius + ',' + radius + ')');
+          g.select('.nv-pieLabels').attr('transform', 'translate(' + radius + ',' + radius + ')');
+      } else {
+          arcRadius = radius;
+          g.select('.nv-pie').attr('transform', 'translate(' + arcRadius + ',' + arcRadius + ')');
+          g.select('.nv-pieLabels').attr('transform', 'translate(' + arcRadius + ',' + arcRadius + ')');
+      }
 
       //------------------------------------------------------------
 
