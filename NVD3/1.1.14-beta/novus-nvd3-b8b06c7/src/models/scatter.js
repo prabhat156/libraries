@@ -91,6 +91,8 @@ nv.models.scatter = function() {
 
       y   .domain(yDomain || d3.extent(seriesData.map(function(d) { return d.y }).concat(forceY)))
           .range(yRange || [availableHeight, 0])
+          // [MODIFIED by PK] added this line for nice-ness of the y-axis
+          .nice()
           ;
 
       z   .domain(sizeDomain || d3.extent(seriesData.map(function(d) { return d.size }).concat(forceSize)))
