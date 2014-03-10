@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<link href="../src/nv.d3.css" rel="stylesheet" type="text/css">
+<style>
+
+body {
+  overflow-y:scroll;
+}
+
+text {
+  font: 12px sans-serif;
+}
+
+.mypiechart {
+  width: 600px;
+  height: 600px;
+  border: 2px;
+}
+.nvd3 .nv-legend .disabled rect {
+  fill-opacity: 0;
+}
+.nvd3 .nv-legend .disabled path {
+  fill-opacity: 0;
+}
+.nvd3.nv-pie path {
+  stroke-width: 0px;
+}
+
+</style>
+<body class='with-3d-shadow with-transitions'>
+
+<!--h2>Test1</h2-->
+<svg id="test1" class="mypiechart"></svg>
+
+<!--
+<h2>Test2</h2>
+<svg id="test2" class="mypiechart"></svg>
+-->
+
+<script src="../lib/d3.v3.js"></script>
+<script src="../nv.d3.js"></script>
+<script src="../src/models/vxLegend.js"></script>
+<script src="../src/models/legend.js"></script>
+<script src="../src/models/pie.js"></script>
+<script src="../src/models/vxPieChart.js"></script>
+<script src="../src/utils.js"></script>
+<script>
+
+  var testdata = [
+    {
+      key: "Organic",
+      y: 5
+    },
+    {
+      key: "Replies",
+      y: 2
+    },
+    {
+      key: "Retweets",
+      y: 9
+    }
+  ];
+
+
+nv.addGraph(function() {
+    var width = 500,
+        height = 500;
+
+    var chart = nv.models.vxPieChart()
+        .x(function(d) { return d.key })
+        .y(function(d) { return d.y })
+        //.color(d3.scale.category10().range())
+        .color(['#a2ddcb', '#246659', '#4b9b8c'])
+        .width(width)
+        .height(height)
+        .showLabels(false)
+        .chartTitle('Sample Pie-Chart')
+        ;
+
+      d3.select("#test1")
+          .datum(testdata)
+        .transition().duration(1200)
+          .attr('width', width)
+          .attr('height', height)
+          .call(chart);
+
+    chart.dispatch.on('stateChange', function(e) { nv.log('New State:', JSON.stringify(e)); });
+
+    return chart;
+});
+
+//nv.addGraph(function() {
+//
+//    var width = 500,
+//        height = 500;
+//
+//    var chart = nv.models.vxPieChart()
+//        .x(function(d) { return d.key })
+//        //.y(function(d) { return d.value })
+//        //.labelThreshold(.08)
+//        //.showLabels(false)
+//        .color(d3.scale.category10().range())
+//        .width(width)
+//        .height(height)
+//        .donut(true);
+//
+//    //// If you comment out the following 3 lines then you will get a full doughnut
+//    //chart.pie
+//    //    .startAngle(function(d) { return d.startAngle/2 -Math.PI/2 })
+//    //    .endAngle(function(d) { return d.endAngle/2 -Math.PI/2 });
+//
+//      //chart.pie.donutLabelsOutside(true).donut(true);
+//
+//      d3.select("#test2")
+//          //.datum(historicalBarChart)
+//          .datum(testdata)
+//        .transition().duration(1200)
+//          .attr('width', width)
+//          .attr('height', height)
+//          .call(chart);
+//
+//    return chart;
+//});
+
+</script>
