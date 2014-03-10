@@ -4,21 +4,21 @@ nv.models.vxMarker = function() {
   // Public Variables with Default Settings
   //------------------------------------------------------------
 
-  var margin = {top: 0, right: 0, bottom: 0, left: 0}
-    , width = 400
-    , height = 20
-    , getX = function(d) {return d.x}
-    , getY = function(d) {return d.y}
-    , getKey = function(d) { return d.key }
-    , color = nv.utils.defaultColor()
-    , updateState = true   //If true, legend will update data.disabled and trigger a 'stateChange' dispatch.
-    , radioButtonMode = false   //If true, clicking legend items will cause it to behave like a radio button. (only one can be selected at a time)
-    , dispatch = d3.dispatch('markerClick', 'markerDblclick', 'markerMouseover', 'markerMouseout', 'stateChange')
-    , x
-    , y
-    , pointKey = null
-    , defaultStyle = 2
-    , getMarkerStyle = function(d){ return d.markerStyle || defaultStyle; }
+  var margin = {top: 0, right: 0, bottom: 0, left: 0},
+      width = 400,
+      height = 20,
+      getX = function(d) {return d.x},
+      getY = function(d) {return d.y},
+      getKey = function(d) { return d.key },
+      color = nv.utils.defaultColor(),
+      updateState = true   //If true, legend will update data.disabled and trigger a 'stateChange' dispatch.,
+      radioButtonMode = false   //If true, clicking legend items will cause it to behave like a radio button. (only one can be selected at a time),
+      dispatch = d3.dispatch('markerClick', 'markerDblclick', 'markerMouseover', 'markerMouseout', 'stateChange'),
+      x,
+      y,
+      pointKey = null,
+      defaultStyle = 2,
+      getMarkerStyle = function(d){ return d.markerStyle || defaultStyle; }
     ;
 
   //============================================================
