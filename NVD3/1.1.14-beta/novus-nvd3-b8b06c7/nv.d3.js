@@ -1152,7 +1152,8 @@ nv.utils.optionsFunc = function(args) {
           var w = (scale.range().length==2) ? scale.range()[1] : (scale.range()[scale.range().length-1]+(scale.range()[1]-scale.range()[0]));
           axisLabel
               .attr('text-anchor', 'middle')
-              .attr('y', xLabelMargin-300)
+              //.attr('y', xLabelMargin-300)
+              .attr('y', axisLabelDistance)
               .attr('x', w/2);
 
           if (showMaxMin) {
@@ -6935,6 +6936,1553 @@ nv.models.indentedTree = function() {
 
   return chart;
 }
+nv.models.vxLegend = function() {
+  "use strict";
+  //============================================================
+  // Public Variables with Default Settings
+  //------------------------------------------------------------
+
+  var margin = {top: 5, right: 0, bottom: 5, left: 0}
+    , width = 400
+    , height = 20
+    , getKey = function(d) { return d.key }
+    , color = nv.utils.defaultColor()
+    , align = true
+    , orientation = 'top'
+    , rightAlign = true
+    , updateState = true   //If true, legend will update data.disabled and trigger a 'stateChange' dispatch.
+    , radioButtonMode = false   //If true, clicking legend items will cause it to behave like a radio button. (only one can be selected at a time)
+    , dispatch = d3.dispatch('legendClick', 'legendDblclick', 'legendMouseover', 'legendMouseout', 'stateChange')
+    , defaultStyle = 1
+    , legendTextStyle = 'font-family:Helvetica; font-size:12pt; fill:#3c4f54'
+    , getLegendStyle = function(d){ return d.legendStyle || defaultStyle}
+    ;
+
+  //============================================================
+
+
+  function chart(selection) {
+    selection.each(function(data) {
+      var availableWidth = width - margin.left - margin.right,
+          availableHeight = height - margin.top - margin.bottom,
+          container = d3.select(this);
+
+
+      //------------------------------------------------------------
+      // Setup containers and skeleton of chart
+
+      var wrap = container.selectAll('g.nv-legend').data([data]);
+      var gEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-legend').append('g');
+      var g = wrap.select('g');
+
+      wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+      //------------------------------------------------------------
+
+      var series = g.selectAll('.nv-series')
+          .data(function(d) { return d });
+      var seriesEnter = series.enter().append('g').attr('class', function(d,i){ return 'nv-series nv-legendStyle-'+getLegendStyle(d);})
+          .on('mouseover', function(d,i) {
+            dispatch.legendMouseover(d,i);  //TODO: Make consistent with other event objects
+          })
+          .on('mouseout', function(d,i) {
+            dispatch.legendMouseout(d,i);
+          })
+          .on('click', function(d,i) {
+            dispatch.legendClick(d,i);
+            if (updateState) {
+               if (radioButtonMode) {
+                   //Radio button mode: set every series to disabled,
+                   //  and enable the clicked series.
+                   data.forEach(function(series) { series.disabled = true});
+                   d.disabled = false;
+               }
+               else {
+                   d.disabled = !d.disabled;
+                   if (data.every(function(series) { return series.disabled})) {
+                       //the default behavior of NVD3 legends is, if every single series
+                       // is disabled, turn all series' back on.
+                       data.forEach(function(series) { series.disabled = false});
+                   }
+               }
+               dispatch.stateChange({
+                  disabled: data.map(function(d) { return !!d.disabled })
+               });
+            }
+          })
+          .on('dblclick', function(d,i) {
+            dispatch.legendDblclick(d,i);
+            if (updateState) {
+                //the default behavior of NVD3 legends, when double clicking one,
+                // is to set all other series' to false, and make the double clicked series enabled.
+                data.forEach(function(series) {
+                   series.disabled = true;
+                });
+                d.disabled = false; 
+                dispatch.stateChange({
+                    disabled: data.map(function(d) { return !!d.disabled })
+                });
+            }
+          });
+
+      // Legend Style 1
+      seriesEnter.filter('.nv-legendStyle-1')
+          .append('rect')
+          .attr('width', 20)
+          .attr('height', 12)
+          .attr('x', 0)
+          .attr('y', -6)
+          .attr('rx', 1)
+          .attr('ry', 1)
+          .style('stroke-width', 2)
+          .attr('class','nv-legend-symbol')
+          ;
+      seriesEnter.filter('.nv-legendStyle-1')
+          .append('text')
+          .attr('text-anchor', 'start')
+          .attr('class','nv-legend-text')
+          .attr('dy', '.32em')
+          .attr('dx', '30')
+          .attr('style', legendTextStyle);
+
+      // Legend Style 2
+      seriesEnter.filter('.nv-legendStyle-2')
+          .append('circle')
+          .style('stroke-width', 2)
+          .attr('class','nv-legend-symbol')
+          .attr('cx', 8)
+          .attr('r', 8);
+      seriesEnter.filter('.nv-legendStyle-2')
+          .append('text')
+          .attr('text-anchor', 'start')
+          .attr('class','nv-legend-text')
+          .attr('dy', '.32em')
+          .attr('dx', '25')
+          .attr('style', legendTextStyle);
+
+      // Legend Style 3
+      seriesEnter.filter('.nv-legendStyle-3')
+          .append('path')
+          // Assuming Area of circle = Area of polygon (6.3 = Math.sqrt(Math.PI*5*5/2))
+          .attr('d', function(d,i){return "M0,0 l9,-9 l9,9 l-9,9 l-9,-9";})
+          .attr('style', "fill-rule: nonzero;")
+          .style('stroke-width', 2)
+          .attr('class','nv-legend-symbol');
+      seriesEnter.filter('.nv-legendStyle-3')
+          .append('text')
+          .attr('text-anchor', 'start')
+          .attr('class','nv-legend-text')
+          .attr('dy', '.32em')
+          .attr('dx', '25')
+          .attr('style', legendTextStyle);
+
+      // Legend Style 3
+      seriesEnter.filter('.nv-legendStyle-4')
+          .append('circle')
+          .style('stroke-width', 2)
+          .attr('class','nv-legend-symbol')
+          .attr('cx', 15)
+          .attr('r', 7);
+      seriesEnter.filter('.nv-legendStyle-4')
+          .append('line')
+          .attr('x1', 0)
+          .attr('x2', 30)
+          .attr('y1', 0)
+          .attr('y2', 0)
+          .style('stroke-width', 2)
+          .attr('class','nv-legend-symbol');
+      seriesEnter.filter('.nv-legendStyle-4')
+          .append('text')
+          .attr('text-anchor', 'start')
+          .attr('class','nv-legend-text')
+          .attr('dy', '.32em')
+          .attr('dx', '38')
+          .attr('style', legendTextStyle);
+
+
+      series.classed('disabled', function(d) { return d.disabled });
+      series.exit().remove();
+      series.select('circle')
+          .style('fill', function(d,i) { return d.color || color(d,i)})
+          .style('stroke', function(d,i) { return d.color || color(d, i) });
+      series.select('line')
+          .style('fill', function(d,i) { return d.color || color(d,i)})
+          .style('stroke', function(d,i) { return d.color || color(d, i) });
+      series.select('rect')
+          .style('fill', function(d,i) { return d.color || color(d,i)})
+          .style('stroke', function(d,i) { return d.color || color(d, i) });
+      series.select('path')
+          .style('fill', function(d,i) { return d.color || color(d,i)})
+          .style('stroke', function(d,i) { return d.color || color(d, i) });
+      series.select('text').text(getKey);
+
+      //TODO: implement fixed-width and max-width options (max-width is especially useful with the align option)
+
+      // NEW ALIGNING CODE, TODO: clean up
+      if (align && (orientation === 'top')) {
+
+        var seriesWidths = [];
+        series.each(function(d,i) {
+              var legendText = d3.select(this).select('text');
+              var nodeTextLength;
+              try {
+                nodeTextLength = legendText.node().getComputedTextLength();
+              }
+              catch(e) {
+                nodeTextLength = nv.utils.calcApproxTextWidth(legendText);
+              }
+           
+              var padding;
+              switch(getLegendStyle(d)){
+                  case 1:
+                      padding = 40;
+                      break;
+                  case 2:
+                      padding = 35;
+                      break;
+                  case 3:
+                      padding = 35;
+                      break;
+                  case 4:
+                      padding = 48;
+                      break;
+                  default:
+                      padding = 35;
+                      break;
+              }
+              seriesWidths.push(nodeTextLength + padding); // padding is based on the style of the legend
+            });
+
+        var seriesPerRow = 0;
+        var legendWidth = 0;
+        var columnWidths = [];
+
+        while ( legendWidth < availableWidth && seriesPerRow < seriesWidths.length) {
+          columnWidths[seriesPerRow] = seriesWidths[seriesPerRow];
+          legendWidth += seriesWidths[seriesPerRow++];
+        }
+        if (seriesPerRow === 0) seriesPerRow = 1; //minimum of one series per row
+
+        while ( legendWidth > availableWidth && seriesPerRow > 1 ) {
+          columnWidths = [];
+          seriesPerRow--;
+
+          for (var k = 0; k < seriesWidths.length; k++) {
+            if (seriesWidths[k] > (columnWidths[k % seriesPerRow] || 0) )
+              columnWidths[k % seriesPerRow] = seriesWidths[k];
+          }
+
+          legendWidth = columnWidths.reduce(function(prev, cur, index, array) {
+                          return prev + cur;
+                        });
+        }
+
+        var xPositions = [];
+        for (var i = 0, curX = 0; i < seriesPerRow; i++) {
+            xPositions[i] = curX;
+            curX += columnWidths[i];
+        }
+
+        series
+            .attr('transform', function(d, i) {
+              return 'translate(' + xPositions[i % seriesPerRow] + ',' + (5 + Math.floor(i / seriesPerRow) * 20) + ')';
+            });
+
+        //position legend as far right as possible within the total width
+        if (rightAlign) {
+           g.attr('transform', 'translate(' + (width - margin.right - legendWidth) + ',' + margin.top + ')');
+        }
+        else {
+           g.attr('transform', 'translate(0' + ',' + margin.top + ')');
+        }
+
+        height = margin.top + margin.bottom + (Math.ceil(seriesWidths.length / seriesPerRow) * 20);
+
+      } else if (align && (orientation === 'right')) {
+
+        // THIS IS A TEST CODE TO VERTICALLY ALIGN ALONG THE RIGHT SIDE
+        var seriesWidths = [];
+        series.each(function(d,i) {
+              var legendText = d3.select(this).select('text');
+              var nodeTextLength;
+              try {
+                nodeTextLength = legendText.node().getComputedTextLength();
+              }
+              catch(e) {
+                nodeTextLength = nv.utils.calcApproxTextWidth(legendText);
+              }
+           
+              var padding;
+              switch(getLegendStyle(d)){
+                  case 1:
+                      padding = 40;
+                      break;
+                  case 2:
+                      padding = 35;
+                      break;
+                  case 3:
+                      padding = 35;
+                      break;
+                  case 4:
+                      padding = 48;
+                      break;
+                  default:
+                      padding = 35;
+                      break;
+              }
+              seriesWidths.push(nodeTextLength + padding); // padding is based on the style of the legend
+            });
+
+        var seriesPerColumn = 0;
+        var legendHeight = 0;
+        var legendWidth = 0;
+        var rowHeights = [];
+        var columnHeights = [];
+        var columnOffsets = [];
+
+        // PK: Initialize with each series in its own row!!!
+        while ( legendHeight < availableHeight && seriesPerColumn < seriesWidths.length) {
+          columnHeights[seriesPerColumn] = 30;
+          legendHeight += 30;
+          seriesPerColumn++;
+        }
+        if (seriesPerColumn === 0) seriesPerColumn = 1; //minimum of one series per column
+
+        // Code for vertical alignment
+        columnOffsets[0] = 0;
+        legendWidth = d3.max(seriesWidths);
+        if(legendHeight > availableHeight){
+            seriesPerColumn = Math.floor(availableHeight/30);
+            legendHeight = 30*seriesPerColumn;
+            legendWidth = 0;
+            
+            columnOffsets[0] = 0;
+            var loop_count = seriesWidths.length/seriesPerColumn;
+            if(seriesWidths.length%seriesPerColumn == 0) loop_count++;
+            for(var k=0; k<loop_count; k++){
+                var curColumnWidth = d3.max(seriesWidths.slice(k*seriesPerColumn, (k+1)*seriesPerColumn-1));
+                columnOffsets[k+1] = columnOffsets[k]+curColumnWidth;
+                legendWidth += curColumnWidth;
+            }
+        }
+
+        var yPositions = [];
+        for (var i = 0, curY = 0; i < seriesPerColumn; i++) {
+            yPositions[i] = curY;
+            curY += 30;
+        }
+
+        series
+            .attr('transform', function(d, i) {
+              var xOffset;
+              switch(getLegendStyle(d)){
+                  case 1:
+                      xOffset = -10;
+                      break;
+                  case 2:
+                      xOffset = -8;
+                      break;
+                  case 3:
+                      xOffset = -9;
+                      break;
+                  case 4:
+                      xOffset = -15;
+                      break;
+                  default:
+                      xOffset = -8;
+                      break;
+              }
+              return 'translate(' + (xOffset + columnOffsets[Math.floor(i / seriesPerColumn)]) + ',' + yPositions[i % seriesPerColumn] + ')';
+            });
+
+        //position legend as far right as possible within the total width
+        if (rightAlign) {
+           g.attr('transform', 'translate(' + (width - margin.right - legendWidth) + ',' + (margin.top+20) + ')');
+        }
+        else {
+           g.attr('transform', 'translate(0' + ',' + margin.top + ')');
+        }
+
+        // TODO: Not sure of this!!!
+        //height = margin.top + margin.bottom + (Math.ceil(seriesWidths.length / seriesPerColumn) * 20);
+        height = margin.top + margin.bottom + 20;
+        width = legendWidth + 40; // Some padding
+
+      } else {
+
+        var ypos = 5,
+            newxpos = 5,
+            maxwidth = 0,
+            xpos;
+        series
+            .attr('transform', function(d, i) {
+              var length = d3.select(this).select('text').node().getComputedTextLength() + 28;
+              xpos = newxpos;
+
+              if (width < margin.left + margin.right + xpos + length) {
+                newxpos = xpos = 5;
+                ypos += 20;
+              }
+
+              newxpos += length;
+              if (newxpos > maxwidth) maxwidth = newxpos;
+
+              return 'translate(' + xpos + ',' + ypos + ')';
+            });
+
+        //position legend as far right as possible within the total width
+        g.attr('transform', 'translate(' + (width - margin.right - maxwidth) + ',' + margin.top + ')');
+
+        height = margin.top + margin.bottom + ypos + 15;
+
+      }
+
+
+    });
+
+    return chart;
+  }
+
+
+  //============================================================
+  // Expose Public Variables
+  //------------------------------------------------------------
+
+  chart.dispatch = dispatch;
+  chart.options = nv.utils.optionsFunc.bind(chart);
+  
+  chart.margin = function(_) {
+    if (!arguments.length) return margin;
+    margin.top    = typeof _.top    != 'undefined' ? _.top    : margin.top;
+    margin.right  = typeof _.right  != 'undefined' ? _.right  : margin.right;
+    margin.bottom = typeof _.bottom != 'undefined' ? _.bottom : margin.bottom;
+    margin.left   = typeof _.left   != 'undefined' ? _.left   : margin.left;
+    return chart;
+  };
+
+  chart.width = function(_) {
+    if (!arguments.length) return width;
+    width = _;
+    return chart;
+  };
+
+  chart.height = function(_) {
+    if (!arguments.length) return height;
+    height = _;
+    return chart;
+  };
+
+  chart.key = function(_) {
+    if (!arguments.length) return getKey;
+    getKey = _;
+    return chart;
+  };
+
+  chart.color = function(_) {
+    if (!arguments.length) return color;
+    color = nv.utils.getColor(_);
+    return chart;
+  };
+
+  chart.align = function(_) {
+    if (!arguments.length) return align;
+    align = _;
+    return chart;
+  };
+
+  chart.orientation = function(_) {
+    if (!arguments.length) return orientation;
+    orientation = _;
+    return chart;
+  };
+
+  chart.rightAlign = function(_) {
+    if (!arguments.length) return rightAlign;
+    rightAlign = _;
+    return chart;
+  };
+
+  chart.updateState = function(_) {
+    if (!arguments.length) return updateState;
+    updateState = _;
+    return chart;
+  };
+
+  chart.radioButtonMode = function(_) {
+    if (!arguments.length) return radioButtonMode;
+    radioButtonMode = _;
+    return chart;
+  };
+
+  chart.defaultStyle = function(_) {
+    if (!arguments.length) return defaultStyle;
+    defaultStyle = _;
+    return chart;
+  };
+
+  chart.legendTextStyle = function(_) {
+    if (!arguments.length) return legendTextStyle;
+    legendTextStyle = _;
+    return chart;
+  };
+
+  //============================================================
+
+
+  return chart;
+}
+nv.models.vxLegendSmall = function() {
+  "use strict";
+  //============================================================
+  // Public Variables with Default Settings
+  //------------------------------------------------------------
+
+  var margin = {top: 5, right: 0, bottom: 5, left: 0}
+    , width = 400
+    , height = 20
+    , getKey = function(d) { return d.key }
+    , color = nv.utils.defaultColor()
+    , align = true
+    , orientation = 'top'
+    , rightAlign = true
+    , updateState = true   //If true, legend will update data.disabled and trigger a 'stateChange' dispatch.
+    , radioButtonMode = false   //If true, clicking legend items will cause it to behave like a radio button. (only one can be selected at a time)
+    , dispatch = d3.dispatch('legendClick', 'legendDblclick', 'legendMouseover', 'legendMouseout', 'stateChange')
+    , defaultStyle = 1
+    , textStyle = 'font-family:Helvetica; font-size:12pt; fill:#3c4f54'
+    // NOTE: legendStyle = 0 is reserved for SPECIAL cases when I dont want to display the legend but I still need the series
+    , getLegendStyle = function(d){
+        //return d.legendStyle || defaultStyle;
+
+        if(typeof d.legendStyle === 'undefined'){
+            return defaultStyle;
+        } else {
+            return d.legendStyle;
+        }
+    }
+    ;
+
+  //============================================================
+
+
+  function chart(selection) {
+    selection.each(function(data) {
+      var availableWidth = width - margin.left - margin.right,
+          availableHeight = height - margin.top - margin.bottom,
+          container = d3.select(this);
+
+      //------------------------------------------------------------
+      // Setup containers and skeleton of chart
+
+      var wrap = container.selectAll('g.nv-legend').data([data]);
+      var gEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-legend').append('g');
+      var g = wrap.select('g');
+
+      wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+      //------------------------------------------------------------
+
+      var series = g.selectAll('.nv-series')
+          .data(function(d) { return d });
+      var seriesEnter = series.enter().append('g').attr('class', function(d,i){ return 'nv-series nv-legendStyle-'+getLegendStyle(d);})
+          .on('mouseover', function(d,i) {
+            dispatch.legendMouseover(d,i);  //TODO: Make consistent with other event objects
+          })
+          .on('mouseout', function(d,i) {
+            dispatch.legendMouseout(d,i);
+          })
+          .on('click', function(d,i) {
+            dispatch.legendClick(d,i);
+            if (updateState) {
+               if (radioButtonMode) {
+                   //Radio button mode: set every series to disabled,
+                   //  and enable the clicked series.
+                   data.forEach(function(series) { series.disabled = true});
+                   d.disabled = false;
+               }
+               else {
+                   d.disabled = !d.disabled;
+                 
+                   // PK: New code to take care of 'linkedTo' cases 
+                   if(d.event && (typeof d.linkedTo !== 'undefined')){
+                       data
+                           .filter(function(dd, j){ return (i != j && d.linkedTo == dd.linkedTo) || (d.linkedTo == j)})
+                           .forEach(function(dd){ dd.disabled = !dd.disabled });
+                   } else if(!d.event) {
+                       data
+                           .filter(function(dd){ return dd.linkedTo == i})
+                           .forEach(function(dd){ dd.disabled = !dd.disabled});
+                   }
+
+                   if (data.every(function(series) { return series.disabled})) {
+                       //the default behavior of NVD3 legends is, if every single series
+                       // is disabled, turn all series' back on.
+                       data.forEach(function(series) { series.disabled = false});
+                   }
+               }
+               dispatch.stateChange({
+                  disabled: data.map(function(d) { return !!d.disabled })
+               });
+            }
+          })
+          .on('dblclick', function(d,i) {
+            dispatch.legendDblclick(d,i);
+            if (updateState) {
+                //the default behavior of NVD3 legends, when double clicking one,
+                // is to set all other series' to false, and make the double clicked series enabled.
+                data.forEach(function(series) {
+                   series.disabled = true;
+                });
+                d.disabled = false; 
+                dispatch.stateChange({
+                    disabled: data.map(function(d) { return !!d.disabled })
+                });
+            }
+          });
+
+      // Legend Style 1
+      seriesEnter.filter('.nv-legendStyle-1')
+          .append('rect')
+          .attr('width', 16)
+          .attr('height', 10)
+          .attr('x', 0)
+          .attr('y', -5)
+          .attr('rx', 1)
+          .attr('ry', 1)
+          .style('stroke-width', 2)
+          .attr('class','nv-legend-symbol')
+          ;
+      seriesEnter.filter('.nv-legendStyle-1')
+          .append('text')
+          .attr('text-anchor', 'start')
+          .attr('class','nv-legend-text')
+          .attr('dy', '.32em')
+          .attr('dx', '25')
+          .attr('style', textStyle);
+
+      // Legend Style 2
+      seriesEnter.filter('.nv-legendStyle-2')
+          .append('circle')
+          .style('stroke-width', 2)
+          .attr('class','nv-legend-symbol')
+          .attr('cx', 5)
+          .attr('r', 5);
+      seriesEnter.filter('.nv-legendStyle-2')
+          .append('text')
+          .attr('text-anchor', 'start')
+          .attr('class','nv-legend-text')
+          .attr('dy', '.32em')
+          .attr('dx', '14');
+      // Legend Style 3
+      seriesEnter.filter('.nv-legendStyle-3')
+          .append('path')
+          // Assuming Area of circle = Area of polygon (6.3 = Math.sqrt(Math.PI*5*5/2))
+          .attr('d', function(d,i){return "M0,0 l6.3,-6.3 l6.3,6.3 l-6.3,6.3 l-6.3,-6.3";})
+          .attr('style', "fill-rule: nonzero;")
+          .style('stroke-width', 2)
+          .attr('class','nv-legend-symbol');
+      seriesEnter.filter('.nv-legendStyle-3')
+          .append('text')
+          .attr('text-anchor', 'start')
+          .attr('class','nv-legend-text')
+          .attr('dy', '.32em')
+          .attr('dx', '17');
+
+      // Legend Style 4
+      seriesEnter.filter('.nv-legendStyle-4')
+          .append('circle')
+          .style('stroke-width', 2)
+          .attr('class','nv-legend-symbol')
+          .attr('cx', 15)
+          .attr('r', 5);
+      seriesEnter.filter('.nv-legendStyle-4')
+          .append('line')
+          .attr('x1', 0)
+          .attr('x2', 30)
+          .attr('y1', 0)
+          .attr('y2', 0)
+          .style('stroke-width', 2)
+          .attr('class','nv-legend-symbol');
+      seriesEnter.filter('.nv-legendStyle-4')
+          .append('text')
+          .attr('text-anchor', 'start')
+          .attr('class','nv-legend-text')
+          .attr('dy', '.32em')
+          .attr('dx', '34');
+
+      // Legend Style 5
+      seriesEnter.filter('.nv-legendStyle-5')
+          .append('line')
+          .attr('x1', 0)
+          .attr('x2', 30)
+          .attr('y1', 0)
+          .attr('y2', 0)
+          .style('stroke-width', 2)
+          .attr('class','nv-legend-symbol');
+      seriesEnter.filter('.nv-legendStyle-5')
+          .append('text')
+          .attr('text-anchor', 'start')
+          .attr('class','nv-legend-text')
+          .attr('dy', '.32em')
+          .attr('dx', '34');
+
+      // TODO: This is a HACK. Legend Style 0
+      // Remove the legendStyle = 0, if you find one!!
+      seriesEnter.filter('.nv-legendStyle-0').remove();
+
+
+      series.classed('disabled', function(d) { return d.disabled });
+      series.exit().remove();
+      series.select('circle')
+          .style('fill', function(d,i) { return d.color || color(d,i)})
+          .style('stroke', function(d,i) { return d.color || color(d, i) });
+      series.select('line')
+          .style('fill', function(d,i) { return d.color || color(d,i)})
+          .style('stroke', function(d,i) { return d.color || color(d, i) });
+      series.select('rect')
+          .style('fill', function(d,i) { return d.color || color(d,i)})
+          .style('stroke', function(d,i) { return d.color || color(d, i) });
+      series.select('path')
+          .style('fill', function(d,i) { return d.color || color(d,i)})
+          .style('stroke', function(d,i) { return d.color || color(d, i) });
+      series.select('text').text(getKey);
+
+      //TODO: implement fixed-width and max-width options (max-width is especially useful with the align option)
+
+      // NEW ALIGNING CODE, TODO: clean up
+      if (align && (orientation === 'top')) {
+
+        var seriesWidths = [];
+        series
+            .filter(function(d){ return d.legendStyle != 0})
+            .each(function(d,i) {
+              var legendText = d3.select(this).select('text');
+              var nodeTextLength;
+              try {
+                nodeTextLength = legendText.node().getComputedTextLength();
+              }
+              catch(e) {
+                nodeTextLength = nv.utils.calcApproxTextWidth(legendText);
+              }
+          
+              var padding;
+              switch(getLegendStyle(d)){
+                  case 1:
+                      padding = 35;
+                      break;
+                  case 2:
+                      padding = 24;
+                      break;
+                  case 3:
+                      padding = 27;
+                      break;
+                  case 4:
+                      padding = 44;
+                      break;
+                  case 5:
+                      padding = 44;
+                      break;
+                  default:
+                      padding = 27;
+                      break;
+              }
+              seriesWidths.push(nodeTextLength + padding); // padding is based on the style of the legend
+            });
+
+        var seriesPerRow = 0;
+        var legendWidth = 0;
+        var columnWidths = [];
+
+        while ( legendWidth < availableWidth && seriesPerRow < seriesWidths.length) {
+          columnWidths[seriesPerRow] = seriesWidths[seriesPerRow];
+          legendWidth += seriesWidths[seriesPerRow++];
+        }
+        if (seriesPerRow === 0) seriesPerRow = 1; //minimum of one series per row
+
+        while ( legendWidth > availableWidth && seriesPerRow > 1 ) {
+          columnWidths = [];
+          seriesPerRow--;
+
+          for (var k = 0; k < seriesWidths.length; k++) {
+            if (seriesWidths[k] > (columnWidths[k % seriesPerRow] || 0) )
+              columnWidths[k % seriesPerRow] = seriesWidths[k];
+          }
+
+          legendWidth = columnWidths.reduce(function(prev, cur, index, array) {
+                          return prev + cur;
+                        });
+        }
+
+        var xPositions = [];
+        for (var i = 0, curX = 0; i < seriesPerRow; i++) {
+            xPositions[i] = curX;
+            curX += columnWidths[i];
+        }
+
+        series
+            .filter(function(d){ return d.legendStyle != 0})
+            .attr('transform', function(d, i) {
+              return 'translate(' + xPositions[i % seriesPerRow] + ',' + (5 + Math.floor(i / seriesPerRow) * 20) + ')';
+            });
+
+        //position legend as far right as possible within the total width
+        if (rightAlign) {
+           g.attr('transform', 'translate(' + (width - margin.right - legendWidth) + ',' + margin.top + ')');
+        }
+        else {
+           g.attr('transform', 'translate(0' + ',' + margin.top + ')');
+        }
+
+        height = margin.top + margin.bottom + (Math.ceil(seriesWidths.length / seriesPerRow) * 20);
+
+      } else if (align && (orientation === 'right')) {
+
+        // THIS IS A TEST CODE TO VERTICALLY ALIGN ALONG THE RIGHT SIDE
+        var seriesWidths = [];
+        series
+               .filter(function(d){ return d.legendStyle != 0})
+               .each(function(d,i) {
+              var legendText = d3.select(this).select('text');
+              var nodeTextLength;
+              try {
+                nodeTextLength = legendText.node().getComputedTextLength();
+              }
+              catch(e) {
+                nodeTextLength = nv.utils.calcApproxTextWidth(legendText);
+              }
+           
+              var padding;
+              switch(getLegendStyle(d)){
+                  case 1:
+                      padding = 35;
+                      break;
+                  case 2:
+                      padding = 24;
+                      break;
+                  case 3:
+                      padding = 27;
+                      break;
+                  case 4:
+                      padding = 44;
+                      break;
+                  case 5:
+                      padding = 44;
+                      break;
+                  default:
+                      padding = 27;
+                      break;
+              }
+              seriesWidths.push(nodeTextLength + padding); // padding is based on the style of the legend
+            });
+
+        var seriesPerColumn = 0;
+        var legendHeight = 0;
+        var legendWidth = 0;
+        var rowHeights = [];
+        var columnHeights = [];
+        var columnOffsets = [];
+
+        // PK: Initialize with each series in its own row!!!
+        while ( legendHeight < availableHeight && seriesPerColumn < seriesWidths.length) {
+          columnHeights[seriesPerColumn] = 30;
+          legendHeight += 30;
+          seriesPerColumn++;
+        }
+        if (seriesPerColumn === 0) seriesPerColumn = 1; //minimum of one series per column
+
+        // Code for vertical alignment
+        columnOffsets[0] = 0;
+        legendWidth = d3.max(seriesWidths);
+        if(legendHeight > availableHeight){
+            seriesPerColumn = Math.floor(availableHeight/30);
+            legendHeight = 30*seriesPerColumn;
+            legendWidth = 0;
+            
+            columnOffsets[0] = 0;
+            var loop_count = seriesWidths.length/seriesPerColumn;
+            if(seriesWidths.length%seriesPerColumn == 0) loop_count++;
+            for(var k=0; k<loop_count; k++){
+                var curColumnWidth = d3.max(seriesWidths.slice(k*seriesPerColumn, (k+1)*seriesPerColumn-1));
+                columnOffsets[k+1] = columnOffsets[k]+curColumnWidth;
+                legendWidth += curColumnWidth;
+            }
+        }
+
+        var yPositions = [];
+        for (var i = 0, curY = 0; i < seriesPerColumn; i++) {
+            yPositions[i] = curY;
+            curY += 30;
+        }
+
+        series
+            .filter(function(d){ return d.legendStyle != 0})
+            .attr('transform', function(d, i) {
+              var xOffset;
+              switch(getLegendStyle(d)){
+                  case 1:
+                      xOffset = -8;
+                      break;
+                  case 2:
+                      xOffset = -5;
+                      break;
+                  case 3:
+                      xOffset = -6.3;
+                      break;
+                  case 4:
+                      xOffset = -15;
+                      break;
+                  case 5:
+                      xOffset = -15;
+                      break;
+                  default:
+                      xOffset = -5;
+                      break;
+              }
+              return 'translate(' + (xOffset + columnOffsets[Math.floor(i / seriesPerColumn)]) + ',' + yPositions[i % seriesPerColumn] + ')';
+            });
+
+        //position legend as far right as possible within the total width
+        if (rightAlign) {
+           g.attr('transform', 'translate(' + (width - margin.right - legendWidth) + ',' + (margin.top+20) + ')');
+           //NEW//g.attr('transform', 'translate(' + (width - margin.right - legendWidth) + ',' + ((availableHeight-legendHeight)/2) + ')');
+        }
+        else {
+           g.attr('transform', 'translate(0' + ',' + margin.top + ')');
+        }
+
+        // TODO: Not sure of this!!!
+        //height = margin.top + margin.bottom + (Math.ceil(seriesWidths.length / seriesPerColumn) * 20);
+        height = margin.top + margin.bottom + 20;
+        width = legendWidth + 40; // Some padding
+
+      } else {
+
+        var ypos = 5,
+            newxpos = 5,
+            maxwidth = 0,
+            xpos;
+        series
+            .filter(function(d){ return d.legendStyle != 0})
+            .attr('transform', function(d, i) {
+              var length = d3.select(this).select('text').node().getComputedTextLength() + 28;
+              xpos = newxpos;
+
+              if (width < margin.left + margin.right + xpos + length) {
+                newxpos = xpos = 5;
+                ypos += 20;
+              }
+
+              newxpos += length;
+              if (newxpos > maxwidth) maxwidth = newxpos;
+
+              return 'translate(' + xpos + ',' + ypos + ')';
+            });
+
+        //position legend as far right as possible within the total width
+        g.attr('transform', 'translate(' + (width - margin.right - maxwidth) + ',' + margin.top + ')');
+
+        height = margin.top + margin.bottom + ypos + 15;
+
+      }
+
+
+    });
+
+    return chart;
+  }
+
+
+  //============================================================
+  // Expose Public Variables
+  //------------------------------------------------------------
+
+  chart.dispatch = dispatch;
+  chart.options = nv.utils.optionsFunc.bind(chart);
+  
+  chart.margin = function(_) {
+    if (!arguments.length) return margin;
+    margin.top    = typeof _.top    != 'undefined' ? _.top    : margin.top;
+    margin.right  = typeof _.right  != 'undefined' ? _.right  : margin.right;
+    margin.bottom = typeof _.bottom != 'undefined' ? _.bottom : margin.bottom;
+    margin.left   = typeof _.left   != 'undefined' ? _.left   : margin.left;
+    return chart;
+  };
+
+  chart.width = function(_) {
+    if (!arguments.length) return width;
+    width = _;
+    return chart;
+  };
+
+  chart.height = function(_) {
+    if (!arguments.length) return height;
+    height = _;
+    return chart;
+  };
+
+  chart.key = function(_) {
+    if (!arguments.length) return getKey;
+    getKey = _;
+    return chart;
+  };
+
+  chart.color = function(_) {
+    if (!arguments.length) return color;
+    color = nv.utils.getColor(_);
+    return chart;
+  };
+
+  chart.align = function(_) {
+    if (!arguments.length) return align;
+    align = _;
+    return chart;
+  };
+
+  chart.orientation = function(_) {
+    if (!arguments.length) return orientation;
+    orientation = _;
+    return chart;
+  };
+
+  chart.rightAlign = function(_) {
+    if (!arguments.length) return rightAlign;
+    rightAlign = _;
+    return chart;
+  };
+
+  chart.updateState = function(_) {
+    if (!arguments.length) return updateState;
+    updateState = _;
+    return chart;
+  };
+
+  chart.radioButtonMode = function(_) {
+    if (!arguments.length) return radioButtonMode;
+    radioButtonMode = _;
+    return chart;
+  };
+
+  chart.defaultStyle = function(_) {
+    if (!arguments.length) return defaultStyle;
+    defaultStyle = _;
+    return chart;
+  };
+
+  //============================================================
+
+
+  return chart;
+}
+nv.models.vxMarker = function() {
+  "use strict";
+  //============================================================
+  // Public Variables with Default Settings
+  //------------------------------------------------------------
+
+  var margin = {top: 0, right: 0, bottom: 0, left: 0}
+    , width = 400
+    , height = 20
+    , getX = function(d) {return d.x}
+    , getY = function(d) {return d.y}
+    , getKey = function(d) { return d.key }
+    , color = nv.utils.defaultColor()
+    , updateState = true   //If true, legend will update data.disabled and trigger a 'stateChange' dispatch.
+    , radioButtonMode = false   //If true, clicking legend items will cause it to behave like a radio button. (only one can be selected at a time)
+    , dispatch = d3.dispatch('markerClick', 'markerDblclick', 'markerMouseover', 'markerMouseout', 'stateChange')
+    , x
+    , y
+    , pointKey = null
+    , defaultStyle = 2
+    , getMarkerStyle = function(d){ return d.markerStyle || defaultStyle; }
+    ;
+
+  //============================================================
+
+  var x0, y0,
+      needsUpdate = false;
+
+  function chart(selection) {
+    selection.each(function(data) {
+
+      //TODO: Trying to fix a hack
+      data.forEach(function(d,i){
+          d.values.forEach(function(point){
+              point.series = i;
+          });
+      });
+
+      var availableWidth = width - margin.left - margin.right,
+          //availableHeight = height - margin.top - margin.bottom,
+          availableHeight = height,
+          container = d3.select(this);
+
+      //------------------------------------------------------------
+      // Setup containers and skeleton of chart
+
+      var wrap = container.selectAll('g.nv-marker').data([data]);
+      var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-marker');
+      var defsEnter = wrapEnter.append('defs');
+      var gEnter = wrapEnter.append('g');
+      var g = wrap.select('g');
+
+      gEnter.append('g').attr('class', 'nv-groups');
+
+      wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+      //------------------------------------------------------------
+
+      x0 = x0 || x;
+      y0 = y0 || y;
+
+      var groups = wrap.select('.nv-groups').selectAll('.nv-group')
+            .data(function(d){ return d }, getKey);
+
+      groups.enter().append('g')
+            .style('stroke', function(d){ return d3.rgb(d.color).darker(0.22); })
+            .style('fill', function(d){ return d.color; })
+            ;
+      groups.exit()
+            .remove();
+
+      groups
+          .attr('class', function(d,i){ return 'nv-group nv-series-' + i + ' nv-markerStyle-'+getMarkerStyle(d);})
+          .classed('hover', function(d){ return d.hover });
+
+      // Notice the difference from vxLegend.js
+      // Code for Marker Style 1, the diamond, 'bottom to top' marker
+      var points = groups.filter('.nv-markerStyle-1').selectAll('g.nv-marker-point')
+          .data(function(d){ return d.values; }, pointKey);
+
+      // Enter only if there is something in the selection
+      if(points.length != 0){
+          var pointsEnter = points.enter().append('g');
+
+          pointsEnter.append('line')
+              .attr('x1', function(d,i){ return x0(getX(d,i))})
+              .attr('x2', function(d,i){ return x0(getX(d,i))})
+              .attr('y1', function(d,i){ return y0.range()[0]})
+              .attr('y2', function(d,i){ return y0.range()[1]})
+              //.style('stroke', '#677070')
+              .style('stroke-width', '2px')
+              .style('stroke-dasharray', '5,5')
+              ;
+          pointsEnter.append('path').attr('class', 'marker-point-top-diamond')
+              .attr('d', function(d,i){ return "M"+x0(getX(d,i))+","+(y0.range()[1]-8)+" l8,8 l-8,8 l-8,-8 l8,-8";})
+              .attr('style', "fill-rule: nonzero;")
+              //.style('fill', '#677070')
+              //.style('stroke', '#677070')
+              ;
+          pointsEnter.append('path').attr('class', 'marker-point-bottom-diamond')
+              .attr('d', function(d,i){ return "M"+x0(getX(d,i))+","+(y0.range()[0]-8)+" l8,8 l-8,8 l-8,-8 l8,-8";})
+              .attr('style', "fill-rule: nonzero;")
+              //.style('fill', '#677070')
+              //.style('stroke', '#677070')
+              ;
+          points.exit().remove();
+          
+          points.each(function(d,i){
+              d3.select(this)
+                .classed('nv-marker-point', true)
+                .classed('nv-marker-point-'+i, true)
+                .classed('hover', false)
+                ;
+          });
+          points.selectAll('line')
+              .transition()
+              .attr('x1', function(d,i){ return x(getX(d,i))})
+              .attr('x2', function(d,i){ return x(getX(d,i))})
+              .attr('y1', function(d,i){ return y.range()[0]})
+              .attr('y2', function(d,i){ return y.range()[1]})
+          points.selectAll('.marker-point-top-diamond')
+              .transition()
+              .attr('d', function(d,i){ return "M"+x(getX(d,i))+","+(y.range()[1]-8)+" l8,8 l-8,8 l-8,-8 l8,-8";});
+          points.selectAll('.marker-point-bottom-diamond')
+              .transition()
+              .attr('d', function(d,i){ return "M"+x(getX(d,i))+","+(y.range()[0]-8)+" l8,8 l-8,8 l-8,-8 l8,-8";});
+
+          // Event Handling
+          points
+              .on('mouseover', function(d, i){
+                  if(needsUpdate || !data[d.series]) return 0;
+                  var series = data[d.series],
+                      point = series.values[i];
+        
+                  // Do not define the event if the tooltip doesnt need to be displayed 
+                  if(series.tooltipFormat == -1) return 0;
+
+                  dispatch.markerMouseover({
+                      point: point,
+                      series: series,
+                      pos: [x(getX(point, i)) + margin.left, y.range()[0] + margin.top],
+                      seriesIndex: d.series,
+                      pointIndex: i
+                  });
+              })
+              .on('mouseout', function(d, i){
+                  if(needsUpdate || !data[d.series]) return 0;
+                  var series = data[d.series],
+                      point = series.values[i];
+          
+                  // Do not define the event if the tooltip doesnt need to be displayed 
+                  if(series.tooltipFormat == -1) return 0;
+
+                  dispatch.markerMouseout({
+                      point: point,
+                      series: series,
+                      seriesIndex: d.series,
+                      pointIndex: i
+                  });
+              });
+      }
+
+      // Code for Marker Style 2, the original 'flag' marker
+      points = groups.filter('.nv-markerStyle-2').selectAll('g.nv-marker-point')
+          .data(function(d){ return d.values}, pointKey);
+
+      // Enter only if somthing is there in the selection
+      if(points.length != 0){
+          var pointsEnter = points.enter().append('g');
+     
+          pointsEnter.append('line')
+              .attr('x1', function(d,i){ return x0(getX(d,i))})
+              .attr('x2', function(d,i){ return x0(getX(d,i))})
+              .attr('y1', function(d,i){ return y0(getY(d,i))})
+              .attr('y2', function(d,i){ return y0(getY(d,i))-40})
+              .attr('style', "stroke-width:2;")
+              ;
+          pointsEnter.append('rect')
+              .attr('x', function(d,i){ return x0(getX(d,i))})
+              .attr('y', function(d,i){ return y0(getY(d,i))-20-40})
+              .attr('width', 60)
+              .attr('height', 20)
+              .attr('style', "fill-opacity:0.5;stroke-width:2;")
+              ;
+          pointsEnter.append('text')
+              .attr('x', function(d,i){ return x0(getX(d,i))+30})
+              .attr('y', function(d,i){ return y0(getY(d,i))-10-40})
+              .attr('dy', '.32em')
+              .attr('text-anchor', 'middle')
+              //.text(function(d,j){ return series.key + ' Ad'})
+              .text(function(d,j){ return ' Ad'})
+              ;
+          points.exit().remove();
+          
+          points.each(function(d,i){
+              d3.select(this)
+                .classed('nv-marker-point', true)
+                .classed('nv-marker-point-'+i, true)
+                .classed('hover', false)
+                ;
+          });
+
+          points.selectAll('line')
+              .transition()
+              .attr('x1', function(d,i){ return x(getX(d,i))})
+              .attr('x2', function(d,i){ return x(getX(d,i))})
+              .attr('y1', function(d,i){ return y(getY(d,i))})
+              .attr('y2', function(d,i){ return y(getY(d,i))-40});
+          points.selectAll('rect')
+              .transition()
+              .attr('x', function(d,i){ return x(getX(d,i))})
+              .attr('y', function(d,i){ return y(getY(d,i))-20-40});
+          points.selectAll('text')
+              .transition()
+              .attr('x', function(d,i){ return x(getX(d,i))+30})
+              .attr('y', function(d,i){ return y(getY(d,i))-10-40});
+
+          // Event Handling
+          points
+              .on('mouseover', function(d, i){
+                  if(needsUpdate || !data[d.series]) return 0;
+                  var series = data[d.series],
+                      point = series.values[i];
+        
+                  // Do not define the event if the tooltip doesnt need to be displayed 
+                  if(series.tooltipFormat == -1) return 0;
+
+                  dispatch.markerMouseover({
+                      point: point,
+                      series: series,
+                      pos: [x(getX(point, i)) + margin.left, y(getY(point, i)) + margin.top],
+                      seriesIndex: d.series,
+                      pointIndex: i
+                  });
+              })
+              .on('mouseout', function(d, i){
+                  if(needsUpdate || !data[d.series]) return 0;
+                  var series = data[d.series],
+                      point = series.values[i];
+          
+                  // Do not define the event if the tooltip doesnt need to be displayed 
+                  if(series.tooltipFormat == -1) return 0;
+
+                  dispatch.markerMouseout({
+                      point: point,
+                      series: series,
+                      seriesIndex: d.series,
+                      pointIndex: i
+                  });
+              });
+      }
+
+      // Code for Marker Style 3, the 'hollow circle with number' marker
+      points = groups.filter('.nv-markerStyle-3').selectAll('g.nv-marker-point')
+          .data(function(d){ return d.values}, pointKey);
+
+      // Enter only if somthing is there in the selection
+      if(points.length != 0){
+          var pointsEnter = points.enter().append('g');
+
+          pointsEnter.append('circle')
+                .attr('cx', function(d,i){ return x0(getX(d,i)) })
+                .attr('cy', function(d,i){ return y0(getY(d,i)) })
+                .attr('r', 10)
+                .attr('style', "stroke-width:2;")
+                //.style('stroke', '#000000')
+                .style('fill', '#ffffff')
+                ;
+          pointsEnter.append('text')
+                .attr('x', function(d,i){ return x0(getX(d,i))})
+                .attr('y', function(d,i){ return y0(getY(d,i))})
+                .attr('style', 'stroke:#000000;')
+                .attr('dy', '.32em')
+                .attr('text-anchor', 'middle')
+                //GOLD//.text(function(d,j){
+                //GOLD//    // TODO you coule use the pointKey or something? Not sure
+                //GOLD//   if(typeof d.y0 === 'undefined'){
+                //GOLD//       return j+1;
+                //GOLD//   } else {
+                //GOLD//       return d.y0;
+                //GOLD//   } 
+                //GOLD//})
+                .text(pointKey)
+                ;
+          points.exit().remove();
+          
+          points.each(function(d,i){
+              d3.select(this)
+                .classed('nv-marker-point', true)
+                .classed('nv-marker-point-'+i, true)
+                .classed('hover', false)
+                ;
+          });
+
+          points.selectAll('circle')
+              .transition()
+              .attr('cx', function(d,i){ return x(getX(d,i)) })
+              .attr('cy', function(d,i){ return y(getY(d,i)) });
+          points.selectAll('text')
+              .transition()
+              .attr('x', function(d,i){ return x(getX(d,i)) })
+              .attr('y', function(d,i){ return y(getY(d,i)) });
+
+          // Event Handling
+          points
+              .on('mouseover', function(d, i){
+                  if(needsUpdate || !data[d.series]) return 0;
+                  var series = data[d.series],
+                      point = series.values[i];
+        
+                  // Do not define the event if the tooltip doesnt need to be displayed 
+                  if(series.tooltipFormat == -1) return 0;
+
+                  dispatch.markerMouseover({
+                      point: point,
+                      series: series,
+                      pos: [x(getX(point, i)) + margin.left, y(getY(point, i)) + margin.top],
+                      seriesIndex: d.series,
+                      pointIndex: i
+                  });
+              })
+              .on('mouseout', function(d, i){
+                  if(needsUpdate || !data[d.series]) return 0;
+                  var series = data[d.series],
+                      point = series.values[i];
+          
+                  // Do not define the event if the tooltip doesnt need to be displayed 
+                  if(series.tooltipFormat == -1) return 0;
+
+                  dispatch.markerMouseout({
+                      point: point,
+                      series: series,
+                      seriesIndex: d.series,
+                      pointIndex: i
+                  });
+              });
+      }
+
+
+      // Code for Marker Style 4, the 'outlier (big circle around the given point)' marker
+      points = groups.filter('.nv-markerStyle-4').selectAll('g.nv-marker-point')
+          .data(function(d){ return d.values}, pointKey);
+
+      // Enter only if somthing is there in the selection
+      if(points.length != 0){
+          var pointsEnter = points.enter().append('g');
+
+          // Define clip-path for this case. For others, its not really required
+          defsEnter.append('clipPath')
+                .attr('id', 'nv-marker-edge-clip')
+            .append('rect');
+          wrap.select('#nv-marker-edge-clip rect')
+            .attr('width', availableWidth)
+            .attr('height', availableHeight);
+
+          // Only add the clip-path to this group
+          groups.filter('.nv-markerStyle-4').attr('clip-path', 'url(#nv-marker-edge-clip)');
+
+          pointsEnter.append('circle')
+                .attr('cx', function(d,i){ return x0(getX(d,i)) })
+                .attr('cy', function(d,i){ return y0(getY(d,i)) })
+                .attr('r', 18)
+                .attr('style', "stroke-width:0.5;")
+                .style('fill-opacity', 0.5)
+                ;
+          points.exit().remove();
+          
+          points.each(function(d,i){
+              d3.select(this)
+                .classed('nv-marker-point', true)
+                .classed('nv-marker-point-'+i, true)
+                .classed('hover', false)
+                ;
+          });
+
+          points.selectAll('circle')
+              .transition()
+              .attr('cx', function(d,i){ return x(getX(d,i)) })
+              .attr('cy', function(d,i){ return y(getY(d,i)) });
+
+          // Event Handling
+          points
+              .on('mouseover', function(d, i){
+                  if(needsUpdate || !data[d.series]) return 0;
+                  var series = data[d.series],
+                      point = series.values[i];
+      
+                  // Do not define the event if the tooltip doesnt need to be displayed 
+                  if(series.tooltipFormat == -1) return 0;
+
+                  dispatch.markerMouseover({
+                      point: point,
+                      series: series,
+                      pos: [x(getX(point, i)) + margin.left, y(getY(point, i)) + margin.top],
+                      seriesIndex: d.series,
+                      pointIndex: i
+                  });
+              })
+              .on('mouseout', function(d, i){
+                  if(needsUpdate || !data[d.series]) return 0;
+                  var series = data[d.series],
+                      point = series.values[i];
+          
+                  // Do not define the event if the tooltip doesnt need to be displayed 
+                  if(series.tooltipFormat == -1) return 0;
+
+                  dispatch.markerMouseout({
+                      point: point,
+                      series: series,
+                      seriesIndex: d.series,
+                      pointIndex: i
+                  });
+              });
+      }
+
+      //store old series
+      x0 = x.copy();
+      y0 = y.copy();
+
+    });
+
+    return chart;
+  }
+
+  //============================================================
+  // Expose Public Variables
+  //------------------------------------------------------------
+
+  chart.dispatch = dispatch;
+  chart.options = nv.utils.optionsFunc.bind(chart);
+  
+  chart.margin = function(_) {
+    if (!arguments.length) return margin;
+    margin.top    = typeof _.top    != 'undefined' ? _.top    : margin.top;
+    margin.right  = typeof _.right  != 'undefined' ? _.right  : margin.right;
+    margin.bottom = typeof _.bottom != 'undefined' ? _.bottom : margin.bottom;
+    margin.left   = typeof _.left   != 'undefined' ? _.left   : margin.left;
+    return chart;
+  };
+
+  chart.width = function(_) {
+    if (!arguments.length) return width;
+    width = _;
+    return chart;
+  };
+
+  chart.height = function(_) {
+    if (!arguments.length) return height;
+    height = _;
+    return chart;
+  };
+
+  chart.key = function(_) {
+    if (!arguments.length) return getKey;
+    getKey = _;
+    return chart;
+  };
+
+  chart.color = function(_) {
+    if (!arguments.length) return color;
+    color = nv.utils.getColor(_);
+    return chart;
+  };
+
+  chart.updateState = function(_) {
+    if (!arguments.length) return updateState;
+    updateState = _;
+    return chart;
+  };
+
+  chart.radioButtonMode = function(_) {
+    if (!arguments.length) return radioButtonMode;
+    radioButtonMode = _;
+    return chart;
+  };
+
+  chart.xScale = function(_){
+      if(!arguments.length) return x;
+      x = _;
+      return chart;
+  }
+
+  chart.yScale = function(_){
+      if(!arguments.length) return y;
+      y = _;
+      return chart;
+  }
+
+  chart.defaultStyle = function(_){
+      if(!arguments.length) return defaultStyle;
+      defaultStyle = _;
+      return chart;
+  }
+
+  chart.defaultStyle = function(_){
+      if(!arguments.length) return defaultStyle;
+      defaultStyle = _;
+      return chart;
+  }
+
+  chart.pointKey = function(_){
+      if(!arguments.length) return pointKey;
+      pointKey = _;
+      return chart;
+  }
+  //============================================================
+
+
+  return chart;
+}
 
 nv.models.line = function() {
   "use strict";
@@ -7134,7 +8682,7 @@ nv.models.line = function() {
   chart.scatter = scatter;
 
   d3.rebind(chart, scatter, 'id', 'interactive', 'size', 'xScale', 'yScale', 'zScale', 'xDomain', 'yDomain', 'xRange', 'yRange',
-    'sizeDomain', 'forceX', 'forceY', 'forceSize', 'clipVoronoi', 'useVoronoi', 'clipRadius', 'padData','highlightPoint','clearHighlights');
+    'sizeDomain', 'sizeRange', 'forceX', 'forceY', 'forceSize', 'clipVoronoi', 'useVoronoi', 'clipRadius', 'padData','highlightPoint','clearHighlights');
 
   chart.options = nv.utils.optionsFunc.bind(chart);
 
@@ -11551,18 +13099,21 @@ nv.models.timelineAndSentimentChart = function() {
     , y2Axis = nv.models.axis()
     , x3Axis = nv.models.axis()
     , y3Axis = nv.models.axis()
-    , legend = nv.models.legend()
+    //, legend = nv.models.legend()
+    , legend = nv.models.vxLegendSmall()
     , controls = nv.models.legend()
     , brush = d3.svg.brush()
     , interactiveLayer = nv.interactiveGuideline()
+    , marker = nv.models.vxMarker()
     ;
 
-  var margin = {top: 60, right: 30, bottom: 20, left: 80}
+  var margin = {top: 80, right: 30, bottom: 40, left: 80}
     , margin2 = {top: 30, right: 30, bottom: 20, left: 60}
     , margin3 = {top: 30, right: 30, bottom: 20, left: 60}
     , dist12 = 20
     , dist23 = 30
     , color = nv.utils.defaultColor()
+    , markerColor = nv.utils.defaultColor()
     , showControls = false
     , controlsData = null
     , width = null
@@ -11595,17 +13146,25 @@ nv.models.timelineAndSentimentChart = function() {
     , chartTitle = "Chart"
     , chartTitleStyle = "font-size:24px"
     , yAxisLabel = "y-Axis Label"
+    , xAxisLabel = "x-Axis Label"
     , yAxisLabelStyle = "text-anchor:middle;font-size:18px"
     , y3AxisLabel = "y3-Axis Label"
     , y3AxisLabelStyle = "text-anchor:middle;font-size:16px"
     // 1m ~ 58750, Default is 5 min
     , extentThreshold = 58750*5
-    , useInteractiveGuideLine = true
-    , plotSentiment = true
+    , useInteractiveGuideLine = false
+    , plotSentiment = false
+    , plotContext = false
+    , plotMarker = true
+    , markerColorScheme = 'implicit' // This can be 'implicit' or 'explicit'
     ;
 
   lines
     .clipEdge(true)
+    // Forcing y-axis to always start from 0
+    .forceY([0])
+    // This will disable the highlighting on the line points
+    .interactive(false)
     ;
   lines2
     .interactive(false)
@@ -11618,9 +13177,11 @@ nv.models.timelineAndSentimentChart = function() {
     .orient('bottom')
     .tickPadding(5)
     .tickFormat(d3.time.scale().tickFormat())
+    .showMaxMin(false)
     ;
   yAxis
     .orient('left')
+    .tickPadding(10)
     ;
   x2Axis
     .orient('bottom')
@@ -11639,21 +13200,71 @@ nv.models.timelineAndSentimentChart = function() {
     .orient('left')
     ;
 
+  // Setup legend style
+  legend
+      .defaultStyle(4)
+      ;
+
+  // Setup marker style
+  marker
+    .defaultStyle(1)
+    // The same function is used to determine the text, so I have to defined this function
+    .pointKey(function(d){ return (typeof d.y0 !== 'undefined') ? d.y0 : d.y; })
+    ;
+
   controls.updateState(false);
   //============================================================
 
   // Setting the scale as d3.time.scale() for all the x-axis
   lines.scatter.xScale(d3.time.scale());
+  lines.sizeDomain([0,1]);
+  lines.sizeRange([0,1]);
+  // Size is treated as area
+  lines.size(Math.PI*5*5);
+
   lines2.scatter.xScale(d3.time.scale());
   lines3.scatter.xScale(d3.time.scale());
 
   // Set the y-axis to have [min,max] to be [0,1]
   lines3.scatter.yDomain([0,1]);
 
+
+
+  //============================================================
+  // Private Variables
+  //------------------------------------------------------------
+
+  var showTooltip = function(e, offsetElement) {
+    var left = e.pos[0] + ( offsetElement.offsetLeft || 0 ),
+        top = e.pos[1] + ( offsetElement.offsetTop || 0),
+        x = xAxis.tickFormat()(lines.x()(e.point, e.pointIndex)),
+        y = yAxis.tickFormat()(lines.y()(e.point, e.pointIndex)),
+        content;
+  
+    //Show the content based on which function to execute
+    if(typeof tooltip === 'function'){
+        content = tooltip(e.series.key,x,y,e,chart);
+    } else {
+        if(typeof e.series.tooltipFormat === 'undefined'){
+            content = tooltip[0](e.series.key,x,y,e,chart);
+        } else {
+            content = tooltip[e.series.tooltipFormat](e.series.key,x,y,e,chart);
+        }
+    }
+
+    // Display the content
+    nv.tooltip.show([left, top], content, null, null, offsetElement);
+
+  };
+
+  //============================================================
+
+
   // CHART Function
   function chart(selection) {
     selection.each(function(data) {
-     
+    
+
       // This is the timeline data 
       var timelineData = data.filter(function(d){return d.timeline});
 
@@ -11663,11 +13274,116 @@ nv.models.timelineAndSentimentChart = function() {
         sentimentData = data.filter(function(d){return d.sentiment});
       } else {
           heightSentiment = 0;
-          dist12 = 0;
+          dist12 = 20;
       }
-      
+
+      // This is marker data for all different types of markers
+      var markerData;
+      if(plotMarker){
+          markerData = data.filter(function(d){ return d.event});
+
+          // If 'linkedTo' is undefined then markerStyle is always 1, cause it doesnt require 'y'
+          markerData
+              .filter(function(series){
+                  return typeof series.linkedTo === 'undefined';
+              })
+              .forEach(function(series){
+                  // This is the marker which doesnot require 'y' values
+                  series.markerStyle = 1;
+
+                  //TODO this is a hack to make sure 'pointKey' doesnt complain
+                  series.values.forEach(function(d){
+                      d.y = Math.random();
+                  });
+              });
+
+          // Populate the 'y' values based on which series the marker is 'linkedTo'
+          markerData
+              .filter(function(series){
+                  return typeof series.linkedTo !== 'undefined';
+              })
+              .forEach(function(series){
+                  // Put an error check here... Currently its just a basic error check
+                  if(series.linkedTo < timelineData.length){
+                      // TODO: This is not generalized, the index of timelineData could be different!!
+                      var refSeries = timelineData[series.linkedTo];
+                      var refXValues = refSeries.values.map(function(d){ return d.x; });
+                      series.values.forEach(function(d){
+                          var idx = refXValues.indexOf(d.x);
+                          d.y = refSeries.values[idx].y;
+                      });
+                  }
+              });
+
+          // Specify the color based on which line it is linked to, or if its not linked to
+          markerData
+              .filter(function(d,i){
+                  return !d.color && (markerColorScheme === 'explicit' || (typeof d.linkedTo === 'undefined'));
+              })
+              .forEach(function(d,i){
+                  d.color = markerColor(d,i);
+              });
+          // This order of execution is IMP
+          markerData.forEach(function(d, i){
+              if(!d.color && (typeof d.linkedTo !== 'undefined')){
+                  d.color = color(d, d.linkedTo);
+              }
+          });
+
+          // Assign value to be disaplyed if the markerStyle == 3
+          markerData
+              .filter(function(series){ return series.markerStyle == 3})
+              .forEach(function(series,i){
+                  series.values.forEach(function(point, j){
+                      point.y0 = j+1;
+                  });
+              });
+
+          //// Setup the numbering, Old working code, TODO integrate with the above lines
+          //if(marker.markerStyle() == 2){
+          //   // Absolute numbering of flags
+          //  //markerData.forEach(function(series){
+          //  //    series.values.forEach(function(d, i){
+          //  //        d.idx = i;
+          //  //    });
+          //  //});
+          //  //var temp = d3.merge(markerData.map(function(series){return series.values}));
+          //  //var temp_sorted = temp.sort(function(a,b){
+          //  //    if(a.x < b.x) return -1;
+          //  //    if(a.x > b.x) return 1;
+          //  //    return 0;
+          //  //});
+          //  //// Notice this is done in-place. This automatically updates the markerData
+          //  //temp_sorted.forEach(function(point, i){
+          //  //    point.y0 = i+1;
+          //  //});
+
+          //   // Relative numbering of flags
+          //  markerData.forEach(function(series){
+          //      series.values.forEach(function(point, i){
+          //          point.y0 = i+1;
+          //      });
+          //  });
+
+          //  //// Setup the marker pointKey
+          //  //marker
+          //  //  .pointKey(function(d){ return d.y0; })
+          //  //  ;
+          //} else {
+          //  //  // Setup the marker pointKey
+          //  //  marker
+          //  //      .pointKey(function(d){ return d.y; });
+          //}
+      }
+
       var container = d3.select(this),
           that = this;
+
+      // Reset context height and dist23
+      if(!plotContext){
+          heightContext = 0;
+          dist23 = 20;
+      }
 
       var availableWidth = (width  || parseInt(container.style('width')) || 960)
                              - margin.left - margin.right,
@@ -11729,10 +13445,11 @@ nv.models.timelineAndSentimentChart = function() {
           .data([chartTitle])
           .enter()
           .append('text')
+          .attr('class', 'nvd3 nv-charttitle')
           .attr('x', availableWidth/2)
           .attr('y', 30)
           .attr("text-anchor", "middle")
-          .attr("style", chartTitleStyle)
+          //.attr("style", chartTitleStyle)
           .text(function(d){return d});
       //===================================================================
 
@@ -11749,6 +13466,14 @@ nv.models.timelineAndSentimentChart = function() {
 
       //------------------------------------------------------------
 
+      //------------------------------------------------------------
+      // Setup marker
+      if(plotMarker){ 
+        marker
+            .width(availableWidth)
+            .height(heightFocus);
+      }
+      //------------------------------------------------------------
 
       //------------------------------------------------------------
       // Setup containers and skeleton of chart
@@ -11788,6 +13513,10 @@ nv.models.timelineAndSentimentChart = function() {
       contextEnter.append('g').attr('class', 'nv-x nv-brush');
       var contextDefs = contextEnter.append('defs');
 
+      // Flags : marker
+      if(plotMarker)
+        gEnter.append('g').attr('class', 'nv-markerWrap');
+
       //------------------------------------------------------------
 
 
@@ -11797,8 +13526,16 @@ nv.models.timelineAndSentimentChart = function() {
       if (showLegend) {
         legend.width(availableWidth - controlWidth());
 
+        var legendData;
+        if(plotMarker){
+            legendData = d3.merge([timelineData, markerData])
+        } else {
+            legendData = timelineData;
+        }
+
         g.select('.nv-legendWrap')
-            .datum(timelineData)
+            //GOLD//.datum(timelineData)
+            .datum(legendData)
             .call(legend);
 
         // PK Commenting this out to make sure the chart title fits nicely
@@ -11894,29 +13631,32 @@ nv.models.timelineAndSentimentChart = function() {
 
       g.select('.nv-focus')
           .attr('transform', 'translate(0,' + (heightSentiment + dist12) + ')')
-      
-      lines2
-        .defined(lines.defined())
-        .width(availableWidth)
-        .height(heightContext)
-        .color(
-          //data
-          timelineData
-            .map(function(d,i) {
-              return d.color || color(d, i);
+     
+ 
+      if(plotContext){
+        lines2
+          .defined(lines.defined())
+          .width(availableWidth)
+          .height(heightContext)
+          .color(
+            //data
+            timelineData
+              .map(function(d,i) {
+                return d.color || color(d, i);
+              })
+              .filter(function(d,i) {
+                return !timelineData[i].disabled;
             })
-            .filter(function(d,i) {
-              return !timelineData[i].disabled;
-          })
-        );
+          );
 
-      g.select('.nv-context')
-          .attr('transform', 'translate(0,' + (heightSentiment + dist12 + heightFocus + dist23) + ')')
+        g.select('.nv-context')
+            .attr('transform', 'translate(0,' + (heightSentiment + dist12 + heightFocus + dist23) + ')')
 
-      var contextLinesWrap = g.select('.nv-context .nv-linesWrap')
-          .datum(timelineData.filter(function(d) { return !d.disabled }))
+        var contextLinesWrap = g.select('.nv-context .nv-linesWrap')
+            .datum(timelineData.filter(function(d) { return !d.disabled }))
 
-      d3.transition(contextLinesWrap).call(lines2);
+        d3.transition(contextLinesWrap).call(lines2);
+      }
 
       //------------------------------------------------------------
 
@@ -11935,7 +13675,11 @@ nv.models.timelineAndSentimentChart = function() {
       xAxis
         .scale(x)
         .ticks( availableWidth / 100 )
-        .tickSize(-heightFocus, 0);
+        .axisLabel(xAxisLabel)
+        //.tickSize(-heightFocus, 0)
+        .axisLabelDistance(50)
+        .tickSize(7)
+        ;
 
       yAxis
         .scale(y)
@@ -11943,7 +13687,7 @@ nv.models.timelineAndSentimentChart = function() {
         .axisLabel(yAxisLabel)
         .axisLabelDistance(30)
         .tickSize( -availableWidth, 0);
-      
+    
       g.select('.nv-focus .nv-x.nv-axis')
           .attr('transform', 'translate(0,' + heightFocus + ')');
 
@@ -11952,7 +13696,7 @@ nv.models.timelineAndSentimentChart = function() {
         .attr("x2", availableWidth)
         .attr("y1", heightFocus)
         .attr("y2", heightFocus)
-        .attr('style', 'stroke:rgb(0,0,0);stroke-width:2')
+        .attr('style', 'stroke:#6bc1c1; stroke-width:2px')
         ;
       //------------------------------------------------------------
 
@@ -12018,35 +13762,37 @@ nv.models.timelineAndSentimentChart = function() {
       //------------------------------------------------------------
       // Setup Secondary (Context) Axes
 
-      x2Axis
-        .scale(x2)
-        .ticks( availableWidth / 100 )
-        .tickSize(-heightContext, 0);
+      if(plotContext){
+        x2Axis
+          .scale(x2)
+          .ticks( availableWidth / 100 )
+          .tickSize(-heightContext, 0);
 
-      g.select('.nv-context .nv-x.nv-axis')
-          .attr('transform', 'translate(0,' + y2.range()[0] + ')');
-      d3.transition(g.select('.nv-context .nv-x.nv-axis'))
-          .call(x2Axis);
+        g.select('.nv-context .nv-x.nv-axis')
+            .attr('transform', 'translate(0,' + y2.range()[0] + ')');
+        d3.transition(g.select('.nv-context .nv-x.nv-axis'))
+            .call(x2Axis);
 
 
-      //y2.nice();
-      y2Axis
-        .scale(y2)
-        .ticks( heightContext / 36 )
-        .tickSize( -availableWidth, 0)
-        .tickFormat(function(d,i){return '';})
-        ;
+        //y2.nice();
+        y2Axis
+          .scale(y2)
+          .ticks( heightContext / 36 )
+          .tickSize( -availableWidth, 0)
+          .tickFormat(function(d,i){return '';})
+          ;
 
-      g.select('.nv-context .nv-x.nv-axis')
-          .attr('transform', 'translate(0,' + y2.range()[0] + ')');
+        g.select('.nv-context .nv-x.nv-axis')
+            .attr('transform', 'translate(0,' + y2.range()[0] + ')');
 
-      g.select('.nv-zeroLine1 line')
-        .attr("x1", 0)
-        .attr("x2", availableWidth)
-        .attr("y1", heightContext)
-        .attr("y2", heightContext)
-        .attr('style', 'stroke:rgb(0,0,0);stroke-width:2')
-        ;
+        g.select('.nv-zeroLine1 line')
+          .attr("x1", 0)
+          .attr("x2", availableWidth)
+          .attr("y1", heightContext)
+          .attr("y2", heightContext)
+          .attr('style', 'stroke:rgb(0,0,0);stroke-width:2')
+          ;
+      }
       //------------------------------------------------------------
 
       //------------------------------------------------------------
@@ -12099,6 +13845,10 @@ nv.models.timelineAndSentimentChart = function() {
 
       legend.dispatch.on('stateChange', function(newState) { 
         chart.update();
+      });
+
+      dispatch.on('tooltipShow', function(e) {
+        if (tooltips) showTooltip(e, that.parentNode);
       });
 
       // Control Handling
@@ -12262,6 +14012,10 @@ nv.models.timelineAndSentimentChart = function() {
         brushExtent = brush.empty() ? null : brush.extent();
         var extent = brush.empty() ? x2.domain() : brush.extent();
 
+        // Provide an external extent if context is not drawn
+        if(!plotContext)
+            extent = d3.extent(timelineData[0].values.map(function(d){ return d.x}));
+
         //The brush extent cannot be less than one (thousand).  If it is, don't update the line chart.
         // changing 1 -> 1000, 58750 ~ 1 min
         // TODO Consider this again. Putting 1 gives the error : Problem parsing d="", Putting larger value doesnt 
@@ -12270,6 +14024,7 @@ nv.models.timelineAndSentimentChart = function() {
           updateBrushBG();
           return;
         }
+
 
         dispatch.brush({extent: extent, brush: brush});
 
@@ -12329,10 +14084,39 @@ nv.models.timelineAndSentimentChart = function() {
             g.select('.nv-senti .nv-y.nv-axis').transition().duration(transitionDuration)
                 .call(y3Axis);
         }
+
+        // Plot the markers
+        if(plotMarker){
+            marker
+                .xScale(x)
+                .yScale(y)
+                .margin({left:0, top:(heightSentiment+dist12)})
+                ;
+
+            // Place the markers
+            var markerWrap = g.select('.nv-markerWrap')
+                .datum(
+                        markerData
+                          //GOLD//.filter(function(d,i){return !timelineData[i].disabled})
+                          .filter(function(d,i){return !d.disabled})
+                          .map(function(d,i){
+                              return {
+                                  key: d.key,
+                                  color: d.color,
+                                  markerStyle: d.markerStyle,
+                                  tooltipFormat: d.tooltipFormat,
+                                  values : d.values.filter(function(d,i){
+                                      return lines.x()(d,i) >= extent[0] && lines.x()(d,i) <= extent[1];
+                                  })
+                                  //values : temp
+                              }
+                          })
+                        );
+            markerWrap.transition().duration(transitionDuration).call(marker);
+        }
       }
 
       //============================================================
-
 
     });
 
@@ -12346,6 +14130,20 @@ nv.models.timelineAndSentimentChart = function() {
 
   dispatch.on('tooltipHide', function() {
     if (tooltips) nv.tooltip.cleanup();
+  });
+
+  //// Testing ....
+  //lines.dispatch.on('elementMouseover.tooltip', function(e) {
+  //    console.log('This is test on lines');
+  //});
+
+
+  marker.dispatch.on('markerMouseover', function(e) {
+    e.pos = [e.pos[0] +  margin.left, e.pos[1] + margin.top];
+    dispatch.tooltipShow(e);
+  });
+  marker.dispatch.on('markerMouseout', function(e) {
+    dispatch.tooltipHide(e);
   });
 
   //============================================================
@@ -12440,6 +14238,12 @@ nv.models.timelineAndSentimentChart = function() {
     return chart;
   };
 
+  chart.markerColor = function(_) {
+    if (!arguments.length) return markerColor;
+    markerColor =nv.utils.getColor(_);
+    return chart;
+  };
+
   // PK Modifications
   chart.showControls = function(_) {
     if (!arguments.length) return showControls;
@@ -12462,6 +14266,12 @@ nv.models.timelineAndSentimentChart = function() {
   chart.yAxisLabel = function(_) {
     if (!arguments.length) return yAxisLabel;
     yAxisLabel = _;
+    return chart;
+  };
+
+  chart.xAxisLabel = function(_) {
+    if (!arguments.length) return xAxisLabel;
+    xAxisLabel = _;
     return chart;
   };
 
@@ -12555,9 +14365,27 @@ nv.models.timelineAndSentimentChart = function() {
     return chart;
   };
 
+  chart.plotContext = function(_) {
+    if (!arguments.length) return plotContext;
+    plotContext = _;
+    return chart;
+  };
+
   chart.useInteractiveGuideLine = function(_) {
     if (!arguments.length) return useInteractiveGuideLine;
     useInteractiveGuideLine = _;
+    return chart;
+  };
+
+  chart.plotMarker = function(_) {
+    if (!arguments.length) return plotMarker;
+    plotMarker = _;
+    return chart;
+  };
+
+  chart.markerColorScheme = function(_) {
+    if (!arguments.length) return markerColorScheme;
+    markerColorScheme = _;
     return chart;
   };
 
@@ -19062,7 +20890,6 @@ nv.models.pie = function() {
           arcRadius = radius-(radius / 5),
           container = d3.select(this);
 
-
       //------------------------------------------------------------
       // Setup containers and skeleton of chart
 
@@ -19076,8 +20903,18 @@ nv.models.pie = function() {
       gEnter.append('g').attr('class', 'nv-pieLabels');
 
       wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
-      g.select('.nv-pie').attr('transform', 'translate(' + availableWidth / 2 + ',' + availableHeight / 2 + ')');
-      g.select('.nv-pieLabels').attr('transform', 'translate(' + availableWidth / 2 + ',' + availableHeight / 2 + ')');
+      //GOLD//g.select('.nv-pie').attr('transform', 'translate(' + availableWidth / 2 + ',' + availableHeight / 2 + ')');
+      //GOLD//g.select('.nv-pieLabels').attr('transform', 'translate(' + availableWidth / 2 + ',' + availableHeight / 2 + ')');
+
+      // PK : Modification to the placement of the pie
+      if(showLabels){
+          g.select('.nv-pie').attr('transform', 'translate(' + radius + ',' + radius + ')');
+          g.select('.nv-pieLabels').attr('transform', 'translate(' + radius + ',' + radius + ')');
+      } else {
+          arcRadius = radius;
+          g.select('.nv-pie').attr('transform', 'translate(' + arcRadius + ',' + arcRadius + ')');
+          g.select('.nv-pieLabels').attr('transform', 'translate(' + arcRadius + ',' + arcRadius + ')');
+      }
 
       //------------------------------------------------------------
 
@@ -19724,6 +21561,335 @@ nv.models.pieChart = function() {
 
   return chart;
 }
+nv.models.vxPieChart = function() {
+  "use strict";
+  //============================================================
+  // Public Variables with Default Settings
+  //------------------------------------------------------------
+
+  var pie = nv.models.pie()
+    , legend = nv.models.vxLegend()
+    ;
+
+  var margin = {top: 60, right: 20, bottom: 20, left: 20}
+    , width = null
+    , height = null
+    , showLegend = true
+    , color = nv.utils.defaultColor()
+    , tooltips = true
+    , tooltip = function(key, y, e, graph) {
+        return '<h3>' + key + '</h3>' +
+               '<p>' +  y + '</p>'
+      }
+    , state = {}
+    , defaultState = null
+    , noData = "No Data Available."
+    , dispatch = d3.dispatch('tooltipShow', 'tooltipHide', 'stateChange', 'changeState')
+    , chartTitle = "Pie-Chart"
+    , chartTitleStyle = "text-anchor:middle;font-size:16pt; fill:#3c4f54; font-weight:normal; font-family:Helvetica"
+    ;
+
+  legend
+      .orientation('right');
+
+  //============================================================
+
+
+  //============================================================
+  // Private Variables
+  //------------------------------------------------------------
+
+  var showTooltip = function(e, offsetElement) {
+    var tooltipLabel = pie.description()(e.point) || pie.x()(e.point)
+    var left = e.pos[0] + ( (offsetElement && offsetElement.offsetLeft) || 0 ),
+        top = e.pos[1] + ( (offsetElement && offsetElement.offsetTop) || 0),
+        y = pie.valueFormat()(pie.y()(e.point)),
+        content = tooltip(tooltipLabel, y, e, chart);
+
+    nv.tooltip.show([left, top], content, e.value < 0 ? 'n' : 's', null, offsetElement);
+  };
+
+  //============================================================
+
+
+  function chart(selection) {
+    selection.each(function(data) {
+      var container = d3.select(this),
+          that = this;
+
+      var availableWidth = (width || parseInt(container.style('width')) || 960)
+                             - margin.left - margin.right,
+          availableHeight = (height || parseInt(container.style('height')) || 400)
+                             - margin.top - margin.bottom;
+
+      chart.update = function() { container.transition().call(chart); };
+      chart.container = this;
+
+      //set state.disabled
+      state.disabled = data.map(function(d) { return !!d.disabled });
+
+      if (!defaultState) {
+        var key;
+        defaultState = {};
+        for (key in state) {
+          if (state[key] instanceof Array)
+            defaultState[key] = state[key].slice(0);
+          else
+            defaultState[key] = state[key];
+        }
+      }
+
+      //------------------------------------------------------------
+      // Display No Data message if there's nothing to show.
+
+      if (!data || !data.length) {
+        var noDataText = container.selectAll('.nv-noData').data([noData]);
+
+        noDataText.enter().append('text')
+          .attr('class', 'nvd3 nv-noData')
+          .attr('dy', '-.7em')
+          .style('text-anchor', 'middle');
+
+        noDataText
+          .attr('x', margin.left + availableWidth / 2)
+          .attr('y', margin.top + availableHeight / 2)
+          .text(function(d) { return d });
+
+        return chart;
+      } else {
+        container.selectAll('.nv-noData').remove();
+      }
+
+      //------------------------------------------------------------
+
+      //===================================================================
+      // Add Chart Title
+      //===================================================================
+      container.selectAll('text')
+          .data([chartTitle])
+          .enter()
+          .append('text')
+          .attr('x', availableWidth/2)
+          .attr('y', 30)
+          .attr("text-anchor", "middle")
+          .attr("style", chartTitleStyle)
+          .text(function(d){return d});
+      //===================================================================
+
+
+      //------------------------------------------------------------
+      // Setup containers and skeleton of chart
+
+      var wrap = container.selectAll('g.nv-wrap.nv-pieChart').data([data]);
+      var gEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-pieChart').append('g');
+      var g = wrap.select('g');
+
+      gEnter.append('g').attr('class', 'nv-pieWrap');
+      gEnter.append('g').attr('class', 'nv-legendWrap');
+
+      //------------------------------------------------------------
+
+
+      //------------------------------------------------------------
+      // Legend
+
+      if (showLegend) {
+        legend
+          .width( availableWidth )
+          .height( availableHeight/2 )
+          .key(pie.x());
+
+        wrap.select('.nv-legendWrap')
+            .datum(data)
+            .call(legend);
+
+        // Update the availableWidth based on the width of the legend
+        if(margin.left != legend.width()){
+            availableWidth = availableWidth - legend.width();
+        }
+
+        //COMMENTING-THIS//if ( margin.top != legend.height()) {
+        //COMMENTING-THIS//  margin.top = legend.height();
+        //COMMENTING-THIS//  availableHeight = (height || parseInt(container.style('height')) || 400)
+        //COMMENTING-THIS//                     - margin.top - margin.bottom;
+        //COMMENTING-THIS//}
+
+        wrap.select('.nv-legendWrap')
+            .attr('transform', 'translate(0,0)');
+      }
+
+      //------------------------------------------------------------
+
+
+      wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+
+      //------------------------------------------------------------
+      // Main Chart Component(s)
+
+      pie
+        .width(availableWidth)
+        .height(availableHeight);
+
+
+      var pieWrap = g.select('.nv-pieWrap')
+          .datum([data]);
+
+      d3.transition(pieWrap).call(pie);
+
+      //------------------------------------------------------------
+
+
+      //============================================================
+      // Event Handling/Dispatching (in chart's scope)
+      //------------------------------------------------------------
+
+      legend.dispatch.on('stateChange', function(newState) {
+        state = newState;
+        dispatch.stateChange(state);
+        chart.update();
+      });
+
+      pie.dispatch.on('elementMouseout.tooltip', function(e) {
+        dispatch.tooltipHide(e);
+      });
+
+      // Update chart from a state object passed to event handler
+      dispatch.on('changeState', function(e) {
+
+        if (typeof e.disabled !== 'undefined') {
+          data.forEach(function(series,i) {
+            series.disabled = e.disabled[i];
+          });
+
+          state.disabled = e.disabled;
+        }
+
+        chart.update();
+      });
+
+      //============================================================
+
+
+    });
+
+    return chart;
+  }
+
+  //============================================================
+  // Event Handling/Dispatching (out of chart's scope)
+  //------------------------------------------------------------
+
+  pie.dispatch.on('elementMouseover.tooltip', function(e) {
+    e.pos = [e.pos[0] +  margin.left, e.pos[1] + margin.top];
+    dispatch.tooltipShow(e);
+  });
+
+  dispatch.on('tooltipShow', function(e) {
+    if (tooltips) showTooltip(e);
+  });
+
+  dispatch.on('tooltipHide', function() {
+    if (tooltips) nv.tooltip.cleanup();
+  });
+
+  //============================================================
+
+
+  //============================================================
+  // Expose Public Variables
+  //------------------------------------------------------------
+
+  // expose chart's sub-components
+  chart.legend = legend;
+  chart.dispatch = dispatch;
+  chart.pie = pie;
+
+  d3.rebind(chart, pie, 'valueFormat', 'values', 'x', 'y', 'description', 'id', 'showLabels', 'donutLabelsOutside', 'pieLabelsOutside', 'labelType', 'donut', 'donutRatio', 'labelThreshold', 'legendTextStyle');
+  chart.options = nv.utils.optionsFunc.bind(chart);
+  
+  chart.margin = function(_) {
+    if (!arguments.length) return margin;
+    margin.top    = typeof _.top    != 'undefined' ? _.top    : margin.top;
+    margin.right  = typeof _.right  != 'undefined' ? _.right  : margin.right;
+    margin.bottom = typeof _.bottom != 'undefined' ? _.bottom : margin.bottom;
+    margin.left   = typeof _.left   != 'undefined' ? _.left   : margin.left;
+    return chart;
+  };
+
+  chart.width = function(_) {
+    if (!arguments.length) return width;
+    width = _;
+    return chart;
+  };
+
+  chart.height = function(_) {
+    if (!arguments.length) return height;
+    height = _;
+    return chart;
+  };
+
+  chart.color = function(_) {
+    if (!arguments.length) return color;
+    color = nv.utils.getColor(_);
+    legend.color(color);
+    pie.color(color);
+    return chart;
+  };
+
+  chart.showLegend = function(_) {
+    if (!arguments.length) return showLegend;
+    showLegend = _;
+    return chart;
+  };
+
+  chart.tooltips = function(_) {
+    if (!arguments.length) return tooltips;
+    tooltips = _;
+    return chart;
+  };
+
+  chart.tooltipContent = function(_) {
+    if (!arguments.length) return tooltip;
+    tooltip = _;
+    return chart;
+  };
+
+  chart.state = function(_) {
+    if (!arguments.length) return state;
+    state = _;
+    return chart;
+  };
+
+  chart.defaultState = function(_) {
+    if (!arguments.length) return defaultState;
+    defaultState = _;
+    return chart;
+  };
+
+  chart.noData = function(_) {
+    if (!arguments.length) return noData;
+    noData = _;
+    return chart;
+  };
+
+  chart.chartTitle = function(_) {
+    if (!arguments.length) return chartTitle;
+    chartTitle = _;
+    return chart;
+  };
+
+  chart.chartTitleStyle = function(_) {
+    if (!arguments.length) return chartTitleStyle;
+    chartTitleStyle = _;
+    return chart;
+  };
+
+  //============================================================
+
+
+  return chart;
+}
 
 nv.models.scatter = function() {
   "use strict";
@@ -19817,6 +21983,8 @@ nv.models.scatter = function() {
 
       y   .domain(yDomain || d3.extent(seriesData.map(function(d) { return d.y }).concat(forceY)))
           .range(yRange || [availableHeight, 0])
+          // [MODIFIED by PK] added this line for nice-ness of the y-axis
+          .nice()
           ;
 
       z   .domain(sizeDomain || d3.extent(seriesData.map(function(d) { return d.size }).concat(forceSize)))
