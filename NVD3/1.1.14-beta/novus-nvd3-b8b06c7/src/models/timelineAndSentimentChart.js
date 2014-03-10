@@ -13,18 +13,21 @@ nv.models.timelineAndSentimentChart = function() {
     , y2Axis = nv.models.axis()
     , x3Axis = nv.models.axis()
     , y3Axis = nv.models.axis()
-    , legend = nv.models.legend()
+    //, legend = nv.models.legend()
+    , legend = nv.models.vxLegendSmall()
     , controls = nv.models.legend()
     , brush = d3.svg.brush()
     , interactiveLayer = nv.interactiveGuideline()
+    , marker = nv.models.vxMarker()
     ;
 
-  var margin = {top: 60, right: 30, bottom: 20, left: 80}
+  var margin = {top: 80, right: 30, bottom: 40, left: 80}
     , margin2 = {top: 30, right: 30, bottom: 20, left: 60}
     , margin3 = {top: 30, right: 30, bottom: 20, left: 60}
     , dist12 = 20
     , dist23 = 30
     , color = nv.utils.defaultColor()
+    , markerColor = nv.utils.defaultColor()
     , showControls = false
     , controlsData = null
     , width = null
@@ -57,17 +60,25 @@ nv.models.timelineAndSentimentChart = function() {
     , chartTitle = "Chart"
     , chartTitleStyle = "font-size:24px"
     , yAxisLabel = "y-Axis Label"
+    , xAxisLabel = "x-Axis Label"
     , yAxisLabelStyle = "text-anchor:middle;font-size:18px"
     , y3AxisLabel = "y3-Axis Label"
     , y3AxisLabelStyle = "text-anchor:middle;font-size:16px"
     // 1m ~ 58750, Default is 5 min
     , extentThreshold = 58750*5
-    , useInteractiveGuideLine = true
-    , plotSentiment = true
+    , useInteractiveGuideLine = false
+    , plotSentiment = false
+    , plotContext = false
+    , plotMarker = true
+    , markerColorScheme = 'implicit' // This can be 'implicit' or 'explicit'
     ;
 
   lines
     .clipEdge(true)
+    // Forcing y-axis to always start from 0
+    .forceY([0])
+    // This will disable the highlighting on the line points
+    .interactive(false)
     ;
   lines2
     .interactive(false)
@@ -80,9 +91,11 @@ nv.models.timelineAndSentimentChart = function() {
     .orient('bottom')
     .tickPadding(5)
     .tickFormat(d3.time.scale().tickFormat())
+    .showMaxMin(false)
     ;
   yAxis
     .orient('left')
+    .tickPadding(10)
     ;
   x2Axis
     .orient('bottom')
@@ -101,21 +114,71 @@ nv.models.timelineAndSentimentChart = function() {
     .orient('left')
     ;
 
+  // Setup legend style
+  legend
+      .defaultStyle(4)
+      ;
+
+  // Setup marker style
+  marker
+    .defaultStyle(1)
+    // The same function is used to determine the text, so I have to defined this function
+    .pointKey(function(d){ return (typeof d.y0 !== 'undefined') ? d.y0 : d.y; })
+    ;
+
   controls.updateState(false);
   //============================================================
 
   // Setting the scale as d3.time.scale() for all the x-axis
   lines.scatter.xScale(d3.time.scale());
+  lines.sizeDomain([0,1]);
+  lines.sizeRange([0,1]);
+  // Size is treated as area
+  lines.size(Math.PI*5*5);
+
   lines2.scatter.xScale(d3.time.scale());
   lines3.scatter.xScale(d3.time.scale());
 
   // Set the y-axis to have [min,max] to be [0,1]
   lines3.scatter.yDomain([0,1]);
 
+
+
+  //============================================================
+  // Private Variables
+  //------------------------------------------------------------
+
+  var showTooltip = function(e, offsetElement) {
+    var left = e.pos[0] + ( offsetElement.offsetLeft || 0 ),
+        top = e.pos[1] + ( offsetElement.offsetTop || 0),
+        x = xAxis.tickFormat()(lines.x()(e.point, e.pointIndex)),
+        y = yAxis.tickFormat()(lines.y()(e.point, e.pointIndex)),
+        content;
+  
+    //Show the content based on which function to execute
+    if(typeof tooltip === 'function'){
+        content = tooltip(e.series.key,x,y,e,chart);
+    } else {
+        if(typeof e.series.tooltipFormat === 'undefined'){
+            content = tooltip[0](e.series.key,x,y,e,chart);
+        } else {
+            content = tooltip[e.series.tooltipFormat](e.series.key,x,y,e,chart);
+        }
+    }
+
+    // Display the content
+    nv.tooltip.show([left, top], content, null, null, offsetElement);
+
+  };
+
+  //============================================================
+
+
   // CHART Function
   function chart(selection) {
     selection.each(function(data) {
-     
+    
+
       // This is the timeline data 
       var timelineData = data.filter(function(d){return d.timeline});
 
@@ -125,11 +188,116 @@ nv.models.timelineAndSentimentChart = function() {
         sentimentData = data.filter(function(d){return d.sentiment});
       } else {
           heightSentiment = 0;
-          dist12 = 0;
+          dist12 = 20;
       }
-      
+
+      // This is marker data for all different types of markers
+      var markerData;
+      if(plotMarker){
+          markerData = data.filter(function(d){ return d.event});
+
+          // If 'linkedTo' is undefined then markerStyle is always 1, cause it doesnt require 'y'
+          markerData
+              .filter(function(series){
+                  return typeof series.linkedTo === 'undefined';
+              })
+              .forEach(function(series){
+                  // This is the marker which doesnot require 'y' values
+                  series.markerStyle = 1;
+
+                  //TODO this is a hack to make sure 'pointKey' doesnt complain
+                  series.values.forEach(function(d){
+                      d.y = Math.random();
+                  });
+              });
+
+          // Populate the 'y' values based on which series the marker is 'linkedTo'
+          markerData
+              .filter(function(series){
+                  return typeof series.linkedTo !== 'undefined';
+              })
+              .forEach(function(series){
+                  // Put an error check here... Currently its just a basic error check
+                  if(series.linkedTo < timelineData.length){
+                      // TODO: This is not generalized, the index of timelineData could be different!!
+                      var refSeries = timelineData[series.linkedTo];
+                      var refXValues = refSeries.values.map(function(d){ return d.x; });
+                      series.values.forEach(function(d){
+                          var idx = refXValues.indexOf(d.x);
+                          d.y = refSeries.values[idx].y;
+                      });
+                  }
+              });
+
+          // Specify the color based on which line it is linked to, or if its not linked to
+          markerData
+              .filter(function(d,i){
+                  return !d.color && (markerColorScheme === 'explicit' || (typeof d.linkedTo === 'undefined'));
+              })
+              .forEach(function(d,i){
+                  d.color = markerColor(d,i);
+              });
+          // This order of execution is IMP
+          markerData.forEach(function(d, i){
+              if(!d.color && (typeof d.linkedTo !== 'undefined')){
+                  d.color = color(d, d.linkedTo);
+              }
+          });
+
+          // Assign value to be disaplyed if the markerStyle == 3
+          markerData
+              .filter(function(series){ return series.markerStyle == 3})
+              .forEach(function(series,i){
+                  series.values.forEach(function(point, j){
+                      point.y0 = j+1;
+                  });
+              });
+
+          //// Setup the numbering, Old working code, TODO integrate with the above lines
+          //if(marker.markerStyle() == 2){
+          //   // Absolute numbering of flags
+          //  //markerData.forEach(function(series){
+          //  //    series.values.forEach(function(d, i){
+          //  //        d.idx = i;
+          //  //    });
+          //  //});
+          //  //var temp = d3.merge(markerData.map(function(series){return series.values}));
+          //  //var temp_sorted = temp.sort(function(a,b){
+          //  //    if(a.x < b.x) return -1;
+          //  //    if(a.x > b.x) return 1;
+          //  //    return 0;
+          //  //});
+          //  //// Notice this is done in-place. This automatically updates the markerData
+          //  //temp_sorted.forEach(function(point, i){
+          //  //    point.y0 = i+1;
+          //  //});
+
+          //   // Relative numbering of flags
+          //  markerData.forEach(function(series){
+          //      series.values.forEach(function(point, i){
+          //          point.y0 = i+1;
+          //      });
+          //  });
+
+          //  //// Setup the marker pointKey
+          //  //marker
+          //  //  .pointKey(function(d){ return d.y0; })
+          //  //  ;
+          //} else {
+          //  //  // Setup the marker pointKey
+          //  //  marker
+          //  //      .pointKey(function(d){ return d.y; });
+          //}
+      }
+
       var container = d3.select(this),
           that = this;
+
+      // Reset context height and dist23
+      if(!plotContext){
+          heightContext = 0;
+          dist23 = 20;
+      }
 
       var availableWidth = (width  || parseInt(container.style('width')) || 960)
                              - margin.left - margin.right,
@@ -191,10 +359,11 @@ nv.models.timelineAndSentimentChart = function() {
           .data([chartTitle])
           .enter()
           .append('text')
+          .attr('class', 'nvd3 nv-charttitle')
           .attr('x', availableWidth/2)
           .attr('y', 30)
           .attr("text-anchor", "middle")
-          .attr("style", chartTitleStyle)
+          //.attr("style", chartTitleStyle)
           .text(function(d){return d});
       //===================================================================
 
@@ -211,6 +380,14 @@ nv.models.timelineAndSentimentChart = function() {
 
       //------------------------------------------------------------
 
+      //------------------------------------------------------------
+      // Setup marker
+      if(plotMarker){ 
+        marker
+            .width(availableWidth)
+            .height(heightFocus);
+      }
+      //------------------------------------------------------------
 
       //------------------------------------------------------------
       // Setup containers and skeleton of chart
@@ -250,6 +427,10 @@ nv.models.timelineAndSentimentChart = function() {
       contextEnter.append('g').attr('class', 'nv-x nv-brush');
       var contextDefs = contextEnter.append('defs');
 
+      // Flags : marker
+      if(plotMarker)
+        gEnter.append('g').attr('class', 'nv-markerWrap');
+
       //------------------------------------------------------------
 
 
@@ -259,8 +440,16 @@ nv.models.timelineAndSentimentChart = function() {
       if (showLegend) {
         legend.width(availableWidth - controlWidth());
 
+        var legendData;
+        if(plotMarker){
+            legendData = d3.merge([timelineData, markerData])
+        } else {
+            legendData = timelineData;
+        }
+
         g.select('.nv-legendWrap')
-            .datum(timelineData)
+            //GOLD//.datum(timelineData)
+            .datum(legendData)
             .call(legend);
 
         // PK Commenting this out to make sure the chart title fits nicely
@@ -356,29 +545,32 @@ nv.models.timelineAndSentimentChart = function() {
 
       g.select('.nv-focus')
           .attr('transform', 'translate(0,' + (heightSentiment + dist12) + ')')
-      
-      lines2
-        .defined(lines.defined())
-        .width(availableWidth)
-        .height(heightContext)
-        .color(
-          //data
-          timelineData
-            .map(function(d,i) {
-              return d.color || color(d, i);
+     
+ 
+      if(plotContext){
+        lines2
+          .defined(lines.defined())
+          .width(availableWidth)
+          .height(heightContext)
+          .color(
+            //data
+            timelineData
+              .map(function(d,i) {
+                return d.color || color(d, i);
+              })
+              .filter(function(d,i) {
+                return !timelineData[i].disabled;
             })
-            .filter(function(d,i) {
-              return !timelineData[i].disabled;
-          })
-        );
+          );
 
-      g.select('.nv-context')
-          .attr('transform', 'translate(0,' + (heightSentiment + dist12 + heightFocus + dist23) + ')')
+        g.select('.nv-context')
+            .attr('transform', 'translate(0,' + (heightSentiment + dist12 + heightFocus + dist23) + ')')
 
-      var contextLinesWrap = g.select('.nv-context .nv-linesWrap')
-          .datum(timelineData.filter(function(d) { return !d.disabled }))
+        var contextLinesWrap = g.select('.nv-context .nv-linesWrap')
+            .datum(timelineData.filter(function(d) { return !d.disabled }))
 
-      d3.transition(contextLinesWrap).call(lines2);
+        d3.transition(contextLinesWrap).call(lines2);
+      }
 
       //------------------------------------------------------------
 
@@ -397,7 +589,11 @@ nv.models.timelineAndSentimentChart = function() {
       xAxis
         .scale(x)
         .ticks( availableWidth / 100 )
-        .tickSize(-heightFocus, 0);
+        .axisLabel(xAxisLabel)
+        //.tickSize(-heightFocus, 0)
+        .axisLabelDistance(50)
+        .tickSize(7)
+        ;
 
       yAxis
         .scale(y)
@@ -405,7 +601,7 @@ nv.models.timelineAndSentimentChart = function() {
         .axisLabel(yAxisLabel)
         .axisLabelDistance(30)
         .tickSize( -availableWidth, 0);
-      
+    
       g.select('.nv-focus .nv-x.nv-axis')
           .attr('transform', 'translate(0,' + heightFocus + ')');
 
@@ -414,7 +610,7 @@ nv.models.timelineAndSentimentChart = function() {
         .attr("x2", availableWidth)
         .attr("y1", heightFocus)
         .attr("y2", heightFocus)
-        .attr('style', 'stroke:rgb(0,0,0);stroke-width:2')
+        .attr('style', 'stroke:#6bc1c1; stroke-width:2px')
         ;
       //------------------------------------------------------------
 
@@ -480,35 +676,37 @@ nv.models.timelineAndSentimentChart = function() {
       //------------------------------------------------------------
       // Setup Secondary (Context) Axes
 
-      x2Axis
-        .scale(x2)
-        .ticks( availableWidth / 100 )
-        .tickSize(-heightContext, 0);
+      if(plotContext){
+        x2Axis
+          .scale(x2)
+          .ticks( availableWidth / 100 )
+          .tickSize(-heightContext, 0);
 
-      g.select('.nv-context .nv-x.nv-axis')
-          .attr('transform', 'translate(0,' + y2.range()[0] + ')');
-      d3.transition(g.select('.nv-context .nv-x.nv-axis'))
-          .call(x2Axis);
+        g.select('.nv-context .nv-x.nv-axis')
+            .attr('transform', 'translate(0,' + y2.range()[0] + ')');
+        d3.transition(g.select('.nv-context .nv-x.nv-axis'))
+            .call(x2Axis);
 
 
-      //y2.nice();
-      y2Axis
-        .scale(y2)
-        .ticks( heightContext / 36 )
-        .tickSize( -availableWidth, 0)
-        .tickFormat(function(d,i){return '';})
-        ;
+        //y2.nice();
+        y2Axis
+          .scale(y2)
+          .ticks( heightContext / 36 )
+          .tickSize( -availableWidth, 0)
+          .tickFormat(function(d,i){return '';})
+          ;
 
-      g.select('.nv-context .nv-x.nv-axis')
-          .attr('transform', 'translate(0,' + y2.range()[0] + ')');
+        g.select('.nv-context .nv-x.nv-axis')
+            .attr('transform', 'translate(0,' + y2.range()[0] + ')');
 
-      g.select('.nv-zeroLine1 line')
-        .attr("x1", 0)
-        .attr("x2", availableWidth)
-        .attr("y1", heightContext)
-        .attr("y2", heightContext)
-        .attr('style', 'stroke:rgb(0,0,0);stroke-width:2')
-        ;
+        g.select('.nv-zeroLine1 line')
+          .attr("x1", 0)
+          .attr("x2", availableWidth)
+          .attr("y1", heightContext)
+          .attr("y2", heightContext)
+          .attr('style', 'stroke:rgb(0,0,0);stroke-width:2')
+          ;
+      }
       //------------------------------------------------------------
 
       //------------------------------------------------------------
@@ -561,6 +759,10 @@ nv.models.timelineAndSentimentChart = function() {
 
       legend.dispatch.on('stateChange', function(newState) { 
         chart.update();
+      });
+
+      dispatch.on('tooltipShow', function(e) {
+        if (tooltips) showTooltip(e, that.parentNode);
       });
 
       // Control Handling
@@ -724,6 +926,10 @@ nv.models.timelineAndSentimentChart = function() {
         brushExtent = brush.empty() ? null : brush.extent();
         var extent = brush.empty() ? x2.domain() : brush.extent();
 
+        // Provide an external extent if context is not drawn
+        if(!plotContext)
+            extent = d3.extent(timelineData[0].values.map(function(d){ return d.x}));
+
         //The brush extent cannot be less than one (thousand).  If it is, don't update the line chart.
         // changing 1 -> 1000, 58750 ~ 1 min
         // TODO Consider this again. Putting 1 gives the error : Problem parsing d="", Putting larger value doesnt 
@@ -732,6 +938,7 @@ nv.models.timelineAndSentimentChart = function() {
           updateBrushBG();
           return;
         }
+
 
         dispatch.brush({extent: extent, brush: brush});
 
@@ -791,10 +998,39 @@ nv.models.timelineAndSentimentChart = function() {
             g.select('.nv-senti .nv-y.nv-axis').transition().duration(transitionDuration)
                 .call(y3Axis);
         }
+
+        // Plot the markers
+        if(plotMarker){
+            marker
+                .xScale(x)
+                .yScale(y)
+                .margin({left:0, top:(heightSentiment+dist12)})
+                ;
+
+            // Place the markers
+            var markerWrap = g.select('.nv-markerWrap')
+                .datum(
+                        markerData
+                          //GOLD//.filter(function(d,i){return !timelineData[i].disabled})
+                          .filter(function(d,i){return !d.disabled})
+                          .map(function(d,i){
+                              return {
+                                  key: d.key,
+                                  color: d.color,
+                                  markerStyle: d.markerStyle,
+                                  tooltipFormat: d.tooltipFormat,
+                                  values : d.values.filter(function(d,i){
+                                      return lines.x()(d,i) >= extent[0] && lines.x()(d,i) <= extent[1];
+                                  })
+                                  //values : temp
+                              }
+                          })
+                        );
+            markerWrap.transition().duration(transitionDuration).call(marker);
+        }
       }
 
       //============================================================
-
 
     });
 
@@ -808,6 +1044,20 @@ nv.models.timelineAndSentimentChart = function() {
 
   dispatch.on('tooltipHide', function() {
     if (tooltips) nv.tooltip.cleanup();
+  });
+
+  //// Testing ....
+  //lines.dispatch.on('elementMouseover.tooltip', function(e) {
+  //    console.log('This is test on lines');
+  //});
+
+
+  marker.dispatch.on('markerMouseover', function(e) {
+    e.pos = [e.pos[0] +  margin.left, e.pos[1] + margin.top];
+    dispatch.tooltipShow(e);
+  });
+  marker.dispatch.on('markerMouseout', function(e) {
+    dispatch.tooltipHide(e);
   });
 
   //============================================================
@@ -902,6 +1152,12 @@ nv.models.timelineAndSentimentChart = function() {
     return chart;
   };
 
+  chart.markerColor = function(_) {
+    if (!arguments.length) return markerColor;
+    markerColor =nv.utils.getColor(_);
+    return chart;
+  };
+
   // PK Modifications
   chart.showControls = function(_) {
     if (!arguments.length) return showControls;
@@ -924,6 +1180,12 @@ nv.models.timelineAndSentimentChart = function() {
   chart.yAxisLabel = function(_) {
     if (!arguments.length) return yAxisLabel;
     yAxisLabel = _;
+    return chart;
+  };
+
+  chart.xAxisLabel = function(_) {
+    if (!arguments.length) return xAxisLabel;
+    xAxisLabel = _;
     return chart;
   };
 
@@ -1017,9 +1279,27 @@ nv.models.timelineAndSentimentChart = function() {
     return chart;
   };
 
+  chart.plotContext = function(_) {
+    if (!arguments.length) return plotContext;
+    plotContext = _;
+    return chart;
+  };
+
   chart.useInteractiveGuideLine = function(_) {
     if (!arguments.length) return useInteractiveGuideLine;
     useInteractiveGuideLine = _;
+    return chart;
+  };
+
+  chart.plotMarker = function(_) {
+    if (!arguments.length) return plotMarker;
+    plotMarker = _;
+    return chart;
+  };
+
+  chart.markerColorScheme = function(_) {
+    if (!arguments.length) return markerColorScheme;
+    markerColorScheme = _;
     return chart;
   };
 
