@@ -4,73 +4,73 @@ nv.models.timelineAndSentimentChart = function() {
   // Public Variables with Default Settings
   //------------------------------------------------------------
 
-  var lines = nv.models.line()
-    , lines2 = nv.models.line()
-    , lines3 = nv.models.line()
-    , xAxis = nv.models.axis()
-    , yAxis = nv.models.axis()
-    , x2Axis = nv.models.axis()
-    , y2Axis = nv.models.axis()
-    , x3Axis = nv.models.axis()
-    , y3Axis = nv.models.axis()
-    //, legend = nv.models.legend()
-    , legend = nv.models.vxLegendSmall()
-    , controls = nv.models.legend()
-    , brush = d3.svg.brush()
-    , interactiveLayer = nv.interactiveGuideline()
-    , marker = nv.models.vxMarker()
+  var lines = nv.models.line(),
+      lines2 = nv.models.line(),
+      lines3 = nv.models.line(),
+      xAxis = nv.models.axis(),
+      yAxis = nv.models.axis(),
+      x2Axis = nv.models.axis(),
+      y2Axis = nv.models.axis(),
+      x3Axis = nv.models.axis(),
+      y3Axis = nv.models.axis(),
+      //legend = nv.models.legend(),
+      legend = nv.models.vxLegendSmall(),
+      controls = nv.models.legend(),
+      brush = d3.svg.brush(),
+      interactiveLayer = nv.interactiveGuideline(),
+      marker = nv.models.vxMarker()
     ;
 
-  var margin = {top: 80, right: 30, bottom: 40, left: 80}
-    , margin2 = {top: 30, right: 30, bottom: 20, left: 60}
-    , margin3 = {top: 30, right: 30, bottom: 20, left: 60}
-    , dist12 = 20
-    , dist23 = 30
-    , color = nv.utils.defaultColor()
-    , markerColor = nv.utils.defaultColor()
-    , showControls = false
-    , controlsData = null
-    , width = null
-    , height = null
-    , height2 = 80
-    , height3 = 140
-    , heightSentiment = 100
-    , heightContext = 60
-    , x
-    , y
-    , x2
-    , y2
-    , x3
-    , y3
-    , showLegend = true
-    , brushExtent = null
-    , tooltips = true
-    , tooltip = function(key, x, y, e, graph) {
+  var margin = {top: 80, right: 30, bottom: 40, left: 80},
+      margin2 = {top: 30, right: 30, bottom: 20, left: 60},
+      margin3 = {top: 30, right: 30, bottom: 20, left: 60},
+      dist12 = 20,
+      dist23 = 30,
+      color = nv.utils.defaultColor(),
+      markerColor = nv.utils.defaultColor(),
+      showControls = false,
+      controlsData = null,
+      width = null,
+      height = null,
+      height2 = 80,
+      height3 = 140,
+      heightSentiment = 100,
+      heightContext = 60,
+      x,
+      y,
+      x2,
+      y2,
+      x3,
+      y3,
+      showLegend = true,
+      brushExtent = null,
+      tooltips = true,
+      tooltip = function(key, x, y, e, graph) {
         return '<h3>' + key + '</h3>' +
                '<p>' +  y + ' at ' + x + '</p>'
-      }
-    , controlCB = function() {
+      },
+      controlCB = function() {
         alert('This is from callback');
-      }
-    , noData = "No Data Available."
-    , dispatch = d3.dispatch('tooltipShow', 'tooltipHide', 'brush', 'stateChange')
-    , controlWidth = function() {return showControls ? 180 : 0 }
-    , transitionDuration = 250
-    , controlState = true
-    , chartTitle = "Chart"
-    , chartTitleStyle = "font-size:24px"
-    , yAxisLabel = "y-Axis Label"
-    , xAxisLabel = "x-Axis Label"
-    , yAxisLabelStyle = "text-anchor:middle;font-size:18px"
-    , y3AxisLabel = "y3-Axis Label"
-    , y3AxisLabelStyle = "text-anchor:middle;font-size:16px"
-    // 1m ~ 58750, Default is 5 min
-    , extentThreshold = 58750*5
-    , useInteractiveGuideLine = false
-    , plotSentiment = false
-    , plotContext = false
-    , plotMarker = true
-    , markerColorScheme = 'implicit' // This can be 'implicit' or 'explicit'
+      },
+      noData = "No Data Available.",
+      dispatch = d3.dispatch('tooltipShow', 'tooltipHide', 'brush', 'stateChange'),
+      controlWidth = function() {return showControls ? 180 : 0 },
+      transitionDuration = 250,
+      controlState = true,
+      chartTitle = "Chart",
+      chartTitleStyle = "font-size:24px",
+      yAxisLabel = "y-Axis Label",
+      xAxisLabel = "x-Axis Label",
+      yAxisLabelStyle = "text-anchor:middle;font-size:18px",
+      y3AxisLabel = "y3-Axis Label",
+      y3AxisLabelStyle = "text-anchor:middle;font-size:16px",
+      // 1m ~ 58750, Default is 5 min
+      extentThreshold = 58750*5,
+      useInteractiveGuideLine = false,
+      plotSentiment = false,
+      plotContext = false,
+      plotMarker = true,
+      markerColorScheme = 'implicit' // This can be 'implicit' or 'explicit'
     ;
 
   lines
