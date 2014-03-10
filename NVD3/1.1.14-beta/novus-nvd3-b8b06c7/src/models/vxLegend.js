@@ -4,20 +4,20 @@ nv.models.vxLegend = function() {
   // Public Variables with Default Settings
   //------------------------------------------------------------
 
-  var margin = {top: 5, right: 0, bottom: 5, left: 0}
-    , width = 400
-    , height = 20
-    , getKey = function(d) { return d.key }
-    , color = nv.utils.defaultColor()
-    , align = true
-    , orientation = 'top'
-    , rightAlign = true
-    , updateState = true   //If true, legend will update data.disabled and trigger a 'stateChange' dispatch.
-    , radioButtonMode = false   //If true, clicking legend items will cause it to behave like a radio button. (only one can be selected at a time)
-    , dispatch = d3.dispatch('legendClick', 'legendDblclick', 'legendMouseover', 'legendMouseout', 'stateChange')
-    , defaultStyle = 1
-    , legendTextStyle = 'font-family:Helvetica; font-size:12pt; fill:#3c4f54'
-    , getLegendStyle = function(d){ return d.legendStyle || defaultStyle}
+  var margin = {top: 5, right: 0, bottom: 5, left: 0},
+      width = 400,
+      height = 20,
+      getKey = function(d) { return d.key },
+      color = nv.utils.defaultColor(),
+      align = true,
+      orientation = 'top',
+      rightAlign = true,
+      updateState = true   //If true, legend will update data.disabled and trigger a 'stateChange' dispatch.,
+      radioButtonMode = false   //If true, clicking legend items will cause it to behave like a radio button. (only one can be selected at a time),
+      dispatch = d3.dispatch('legendClick', 'legendDblclick', 'legendMouseover', 'legendMouseout', 'stateChange'),
+      defaultStyle = 1,
+      legendTextStyle = 'font-family:Helvetica; font-size:12pt; fill:#3c4f54',
+      getLegendStyle = function(d){ return d.legendStyle || defaultStyle}
     ;
 
   //============================================================
