@@ -597,7 +597,8 @@ nv.models.timelineAndSentimentChart = function() {
 
       yAxis
         .scale(y)
-        .ticks( heightFocus / 36 )
+        .ticks( heightFocus / 60 )
+        //.ticks( 4 )
         .axisLabel(yAxisLabel)
         .axisLabelDistance(30)
         .tickSize( -availableWidth, 0);
@@ -959,7 +960,7 @@ nv.models.timelineAndSentimentChart = function() {
                 })
             );
 
-        focusLinesWrap.transition().duration(transitionDuration).call(lines);
+        focusLinesWrap.transition().duration(transitionDuration).call(lines.numYTicks(heightFocus/60));
 
         // Update Main (Focus) Axes
         g.select('.nv-focus .nv-x.nv-axis').transition().duration(transitionDuration)
