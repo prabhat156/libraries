@@ -106,10 +106,11 @@ nv.models.vxPieChart = function() {
           .data([chartTitle])
           .enter()
           .append('text')
+          .attr('class', 'nvd3 nv-charttitle')
           .attr('x', availableWidth/2)
           .attr('y', 30)
           .attr("text-anchor", "middle")
-          .attr("style", chartTitleStyle)
+          //.attr("style", chartTitleStyle)
           .text(function(d){return d});
       //===================================================================
 

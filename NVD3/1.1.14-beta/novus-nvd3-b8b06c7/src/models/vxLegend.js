@@ -16,7 +16,6 @@ nv.models.vxLegend = function() {
       radioButtonMode = false,   //If true, clicking legend items will cause it to behave like a radio button. (only one can be selected at a time),
       dispatch = d3.dispatch('legendClick', 'legendDblclick', 'legendMouseover', 'legendMouseout', 'stateChange'),
       defaultStyle = 1,
-      legendTextStyle = 'font-family:Helvetica; font-size:12pt; fill:#3c4f54',
       getLegendStyle = function(d){ return d.legendStyle || defaultStyle}
     ;
 
@@ -105,7 +104,7 @@ nv.models.vxLegend = function() {
           .attr('class','nv-legend-text')
           .attr('dy', '.32em')
           .attr('dx', '30')
-          .attr('style', legendTextStyle);
+          ;
 
       // Legend Style 2
       seriesEnter.filter('.nv-legendStyle-2')
@@ -120,7 +119,7 @@ nv.models.vxLegend = function() {
           .attr('class','nv-legend-text')
           .attr('dy', '.32em')
           .attr('dx', '25')
-          .attr('style', legendTextStyle);
+          ;
 
       // Legend Style 3
       seriesEnter.filter('.nv-legendStyle-3')
@@ -136,7 +135,7 @@ nv.models.vxLegend = function() {
           .attr('class','nv-legend-text')
           .attr('dy', '.32em')
           .attr('dx', '25')
-          .attr('style', legendTextStyle);
+          ;
 
       // Legend Style 3
       seriesEnter.filter('.nv-legendStyle-4')
@@ -159,7 +158,7 @@ nv.models.vxLegend = function() {
           .attr('class','nv-legend-text')
           .attr('dy', '.32em')
           .attr('dx', '38')
-          .attr('style', legendTextStyle);
+          ;
 
 
       series.classed('disabled', function(d) { return d.disabled });
@@ -479,12 +478,6 @@ nv.models.vxLegend = function() {
   chart.defaultStyle = function(_) {
     if (!arguments.length) return defaultStyle;
     defaultStyle = _;
-    return chart;
-  };
-
-  chart.legendTextStyle = function(_) {
-    if (!arguments.length) return legendTextStyle;
-    legendTextStyle = _;
     return chart;
   };
 

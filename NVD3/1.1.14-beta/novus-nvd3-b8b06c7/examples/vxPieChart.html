@@ -26,11 +26,27 @@ text {
   stroke-width: 0px;
 }
 
+/* Styling Chart Title*/
+.nvd3.nv-charttitle {
+    font-family: Helvetica;
+    font-size: 16pt;
+    fill: #3c4f54;
+    font-weight: normal;
+}
+
+.nvd3 .nv-legend text {
+    font-family: Helvetica;
+    font-size: 12pt;
+    fill: #3c4f54;
+}
+
 </style>
-<body class='with-3d-shadow with-transitions'>
+<body>
 
 <!--h2>Test1</h2-->
-<svg id="test1" class="mypiechart"></svg>
+  <div id="test1" class='with-3d-shadow with-transitions'>
+    <svg class="mypiechart"></svg>
+  </div>
 
 <!--
 <h2>Test2</h2>
@@ -77,7 +93,7 @@ nv.addGraph(function() {
         .chartTitle('Sample Pie-Chart')
         ;
 
-      d3.select("#test1")
+      d3.select("#test1 svg")
           .datum(testdata)
         .transition().duration(1200)
           .attr('width', width)
