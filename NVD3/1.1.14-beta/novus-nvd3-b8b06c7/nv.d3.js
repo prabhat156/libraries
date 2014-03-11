@@ -8683,7 +8683,7 @@ nv.models.line = function() {
   chart.scatter = scatter;
 
   d3.rebind(chart, scatter, 'id', 'interactive', 'size', 'xScale', 'yScale', 'zScale', 'xDomain', 'yDomain', 'xRange', 'yRange',
-    'sizeDomain', 'sizeRange', 'forceX', 'forceY', 'forceSize', 'clipVoronoi', 'useVoronoi', 'clipRadius', 'padData','highlightPoint','clearHighlights');
+    'sizeDomain', 'numYTicks', 'sizeRange', 'forceX', 'forceY', 'forceSize', 'clipVoronoi', 'useVoronoi', 'clipRadius', 'padData','highlightPoint','clearHighlights');
 
   chart.options = nv.utils.optionsFunc.bind(chart);
 
@@ -13684,7 +13684,8 @@ nv.models.timelineAndSentimentChart = function() {
 
       yAxis
         .scale(y)
-        .ticks( heightFocus / 36 )
+        .ticks( heightFocus / 60 )
+        //.ticks( 4 )
         .axisLabel(yAxisLabel)
         .axisLabelDistance(30)
         .tickSize( -availableWidth, 0);
@@ -14046,7 +14047,7 @@ nv.models.timelineAndSentimentChart = function() {
                 })
             );
 
-        focusLinesWrap.transition().duration(transitionDuration).call(lines);
+        focusLinesWrap.transition().duration(transitionDuration).call(lines.numYTicks(heightFocus/60));
 
         // Update Main (Focus) Axes
         g.select('.nv-focus .nv-x.nv-axis').transition().duration(transitionDuration)
@@ -21931,6 +21932,7 @@ nv.models.scatter = function() {
     , singlePoint  = false
     , dispatch     = d3.dispatch('elementClick', 'elementMouseover', 'elementMouseout')
     , useVoronoi   = true
+    , numYTicks     = null
     ;
 
   //============================================================
@@ -21987,6 +21989,25 @@ nv.models.scatter = function() {
           // [MODIFIED by PK] added this line for nice-ness of the y-axis
           .nice()
           ;
+
+      // PK: Code to make sure all the ticks lines are displayed by extending the domain appropriately.
+      if(numYTicks){
+          var tickValues = y.ticks(numYTicks);
+
+          if(tickValues.slice(-1)[0] < d3.extent(seriesData.map(function(d){ return d.y}))[1]){
+              if(tickValues.length > 1){
+                  // This is required to make sure that the changes persist
+                  forceY.push(tickValues.slice(-1)[0] + (tickValues[1]-tickValues[0]));
+
+                  // Recompute the axis
+                  y   .domain(yDomain || d3.extent(seriesData.map(function(d) { return d.y }).concat(forceY)))
+                      .range(yRange || [availableHeight, 0])
+                      .nice()
+                      ;
+              }
+          }
+      }
+      // PK: END
 
       z   .domain(sizeDomain || d3.extent(seriesData.map(function(d) { return d.size }).concat(forceSize)))
           .range(sizeRange || [16, 256]);
@@ -22560,6 +22581,12 @@ nv.models.scatter = function() {
   chart.singlePoint = function(_) {
     if (!arguments.length) return singlePoint;
     singlePoint = _;
+    return chart;
+  };
+
+  chart.numYTicks = function(_) {
+    if (!arguments.length) return numYTicks;
+    numYTicks = _;
     return chart;
   };
 
