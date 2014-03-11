@@ -611,7 +611,8 @@ nv.models.timelineAndSentimentChart = function() {
         .attr("x2", availableWidth)
         .attr("y1", heightFocus)
         .attr("y2", heightFocus)
-        .attr('style', 'stroke:#6bc1c1; stroke-width:2px')
+        // UPDATE: Handled by CSS now
+        //.attr('style', 'stroke:#6bc1c1; stroke-width:2px')
         ;
       //------------------------------------------------------------
 
@@ -973,9 +974,10 @@ nv.models.timelineAndSentimentChart = function() {
         //======================================================================
         // Set the font size for the Primay y-axis
         //======================================================================
-        g.select('.nv-focus .nv-y.nv-axis').select('.nv-axis').select('.nv-axislabel')
-              .attr("style", yAxisLabelStyle)
-              ;
+        // Style is handled by CSS now
+        //g.select('.nv-focus .nv-y.nv-axis').select('.nv-axis').select('.nv-axislabel')
+        //      .attr("style", yAxisLabelStyle)
+        //      ;
 
         if(plotSentiment){
             // Update Sentiment (Senti)
