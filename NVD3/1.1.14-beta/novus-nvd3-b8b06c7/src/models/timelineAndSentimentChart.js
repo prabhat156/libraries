@@ -21,7 +21,7 @@ nv.models.timelineAndSentimentChart = function() {
       marker = nv.models.vxMarker()
     ;
 
-  var margin = {top: 80, right: 30, bottom: 40, left: 80},
+  var margin = {top: 80, right: 30, bottom: 40, left: 100},
       margin2 = {top: 30, right: 30, bottom: 20, left: 60},
       margin3 = {top: 30, right: 30, bottom: 20, left: 60},
       dist12 = 20,
@@ -600,7 +600,7 @@ nv.models.timelineAndSentimentChart = function() {
         .ticks( heightFocus / 60 )
         //.ticks( 4 )
         .axisLabel(yAxisLabel)
-        .axisLabelDistance(30)
+        .axisLabelDistance(20)
         .tickSize( -availableWidth, 0);
     
       g.select('.nv-focus .nv-x.nv-axis')
