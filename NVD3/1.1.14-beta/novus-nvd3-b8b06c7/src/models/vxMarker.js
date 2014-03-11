@@ -88,8 +88,9 @@ nv.models.vxMarker = function() {
               .attr('y1', function(d,i){ return y0.range()[0]})
               .attr('y2', function(d,i){ return y0.range()[1]})
               //.style('stroke', '#677070')
-              .style('stroke-width', '2px')
-              .style('stroke-dasharray', '5,5')
+              // UPDATE: width and dasharray are handled by CSS now
+              //.style('stroke-width', '2px')
+              //.style('stroke-dasharray', '5,5')
               ;
           pointsEnter.append('path').attr('class', 'marker-point-top-diamond')
               .attr('d', function(d,i){ return "M"+x0(getX(d,i))+","+(y0.range()[1]-8)+" l8,8 l-8,8 l-8,-8 l8,-8";})
