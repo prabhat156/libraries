@@ -204,6 +204,26 @@ svg {
   -moz-border-radius: 1px;
   border-radius: 1px;
 }
+
+/* line weight = 3px*/
+.nvd3 .nv-groups path.nv-line {
+  stroke-width: 3px;
+}
+
+/* Width of zeroLine = 2px*/
+.nvd3 .nv-y.nv-axis .nv-zeroLine line {
+    stroke-width: 2px;
+}
+
+/* Width of horizontal tick lines = 1px*/
+.nvd3 .nv-y.nv-axis line {
+    stroke-width: 1px;
+}
+
+/* Width of ticks on x-axis = 2px*/
+.nvd3 .nv-x.nv-axis line{
+    stroke-width: 2px;
+}
 </style>
 <body>
 
@@ -217,8 +237,10 @@ svg {
 <script src="../src/utils.js"></script>
 <script src="../src/models/legend.js"></script>
 <script src="../src/models/vxLegendSmall.js"></script>
+<script src="../src/models/vxLegend.js"></script>
 <script src="../src/models/axis.js"></script>
 <script src="../src/models/scatter.js"></script>
+<script src="../src/models/marker.js"></script>
 <script src="../src/models/vxMarker.js"></script>
 <script src="../src/models/line.js"></script>
 <script src="../src/models/timelineAndSentimentChart.js"></script>
