@@ -63,8 +63,6 @@ nv.models.discreteBar = function() {
               })
             });
 
-      console.log('xRange : ' + xRange);
-
       x   .domain(xDomain || d3.merge(seriesData).map(function(d) { return d.x }))
           //.rangeBands(xRange || [0, availableWidth], .1);
           // TODO : Currently cant pass xRange from linearDiscreteBar....js
