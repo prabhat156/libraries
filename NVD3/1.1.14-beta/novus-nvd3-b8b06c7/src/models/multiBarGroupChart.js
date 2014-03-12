@@ -41,12 +41,13 @@ nv.models.multiBarGroupChart = function() {
     , transitionDuration = 250
     , chartTitle = "Chart"
     , chartTitleStyle = "font-size:24px"
+    , xAxisLabel = "x-Axis Label"
     , yAxisLabel = "y-Axis Label"
     , yAxisLabelStyle = "text-anchor:middle;font-size:18px"
     ;
 
   multibar
-    .stacked(false)
+    .stacked(true)
     ;
   xAxis
     .orient('bottom')
@@ -250,7 +251,7 @@ nv.models.multiBarGroupChart = function() {
       var barsWrap = g.select('.nv-barsWrap')
           .datum(data.filter(function(d) { return !d.disabled }))
 
-      barsWrap.transition().call(multibar);
+      barsWrap.transition().call(multibar.numYTicks(availableHeight/60));
 
       //------------------------------------------------------------
 
@@ -264,6 +265,8 @@ nv.models.multiBarGroupChart = function() {
             .ticks( availableWidth / 100 )
             //.tickSize(-availableHeight, 0)
             .tickSize(0)
+            .axisLabel(xAxisLabel)
+            .axisLabelDistance(60)
             ;
 
           g.select('.nv-x.nv-axis')
@@ -316,11 +319,12 @@ nv.models.multiBarGroupChart = function() {
       }
 
       // Display the ticks
-      tick_scale.domain([0, data.length]);
+      var maxGroupSize = d3.max(data.map(function(d){ return d.values.length}));
+      tick_scale.domain([0, maxGroupSize]);
       tick_scale.range([0, availableWidth]);
       xAxisTicks
         .scale(tick_scale)
-        .tickValues(tick_scale.ticks(data.length).slice(1,-1))
+        .tickValues(tick_scale.ticks(maxGroupSize).slice(1,-1))
         .tickSize(7)
         ;
 
@@ -331,10 +335,9 @@ nv.models.multiBarGroupChart = function() {
       // End Display the ticks
 
       if (showYAxis) {
-          y.nice();      
           yAxis
             .scale(y)
-            .ticks( availableHeight / 36 )
+            .ticks( availableHeight / 60 )
             .axisLabel(yAxisLabel)
             .axisLabelDistance(30)
             .tickSize( -availableWidth, 0);
@@ -456,7 +459,7 @@ nv.models.multiBarGroupChart = function() {
   chart.yAxis = yAxis;
 
   d3.rebind(chart, multibar, 'x', 'y', 'xDomain', 'yDomain', 'xRange', 'yRange', 'forceX', 'forceY', 'clipEdge',
-   'id', 'stacked', 'stackOffset', 'delay', 'barColor','groupSpacing', 'barSpacing', 'valueFormat', 'getY0');
+   'id', 'stacked', 'stackOffset', 'delay', 'barColor','groupInnerPadding', 'groupOuterPadding', 'barSpacing', 'numYTicks', 'valueFormat', 'getY0');
 
   chart.options = nv.utils.optionsFunc.bind(chart);
   
@@ -521,6 +524,12 @@ nv.models.multiBarGroupChart = function() {
   chart.showYAxis = function(_) {
     if (!arguments.length) return showYAxis;
     showYAxis = _;
+    return chart;
+  };
+
+  chart.xAxisLabel = function(_) {
+    if (!arguments.length) return xAxisLabel;
+    xAxisLabel = _;
     return chart;
   };
 
