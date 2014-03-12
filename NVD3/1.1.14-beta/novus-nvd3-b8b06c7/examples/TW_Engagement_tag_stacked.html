@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<link href="../src/nv.d3.css" rel="stylesheet" type="text/css">
+
+<style>
+
+body {
+  overflow-y:scroll;
+}
+
+text {
+  font: 12px sans-serif;
+}
+
+#chart1 {
+  height: 500px;
+  margin: 10px;
+  min-width: 100px;
+  min-height: 100px;
+/*
+  Minimum height and width is a good idea to prevent negative SVG dimensions...
+  For example width should be =< margin.left + margin.right + 1,
+  of course 1 pixel for the entire chart would not be very useful, BUT should not have errors
+*/
+}
+
+.nvd3 .nv-legend .disabled rect {
+  fill-opacity: 0;
+}
+.nvd3 .nv-legend .disabled path {
+  fill-opacity: 0;
+}
+
+.nvd3 .nv-axis line {
+  fill: none;
+  stroke: #b6c1c1;
+  shape-rendering: crispEdges;
+}
+
+.nvd3 .nv-axis text {
+    fill: #3c4f54;
+    font-size: 11pt;
+}
+
+.nvd3 .nv-axis .nv-axislabel {
+    font-family: Helvetica;
+    font-size: 12pt;
+    fill: #3c4f54;
+    font-weight: bold;
+}
+
+.nvd3.nv-charttitle {
+    font-family: Helvetica;
+    font-size: 16pt;
+    fill: #3c4f54;
+    font-weight: normal;
+}
+
+/* Legend Styling*/
+.nvd3 .nv-legend text {
+    font-size: 12pt;
+    font-family: Helvetica;
+    fill: #3c4f54;
+}
+
+/* This is to make the vertical line at x=0 disappear*/
+.nvd3 .nv-axis path {
+  stroke: #ffffff;
+}
+
+
+/* Width of zeroLine = 2px*/
+.nvd3 .nv-y.nv-axis .nv-zeroLine line {
+    stroke-width: 2px;
+}
+
+/* Width of zeroLine = 2px*/
+.nvd3 .nv-y.nv-axis .nv-zeroLine line {
+    stroke-width: 2px;
+}
+
+/* Width of horizontal tick lines = 1px*/
+.nvd3 .nv-y.nv-axis line {
+    stroke-width: 1px;
+}
+
+/* Width of ticks on x-axis = 2px*/
+.nvd3 .nv-x-ticks.nv-axis line{
+    stroke-width: 2px;
+}
+
+</style>
+<body>
+
+  <div id="chart1" class='with-3d-shadow with-transitions'>
+    <svg></svg>
+  </div>
+
+<script src="../lib/d3.v3.js"></script>
+<script src="../nv.d3.js"></script>
+<script src="../src/tooltip.js"></script>
+<script src="../src/utils.js"></script>
+<script src="../src/models/legend.js"></script>
+<script src="../src/models/vxLegend.js"></script>
+<script src="../src/models/vxLegendSmall.js"></script>
+<script src="../src/models/axis.js"></script>
+<script src="../src/models/multiBarGroup.js"></script>
+<script src="../src/models/multiBarGroupChart.js"></script>
+<script src="stream_layers.js"></script>
+<script>
+
+var test_data = stream_layers(3,10+Math.random()*100,.1).map(function(data, i) {
+    var testKey;
+    if(i==0) testKey = 'Positive';
+    if(i==1) testKey = 'Neutral';
+    if(i==2) testKey = 'Negative';
+  return {
+    key: testKey,
+    values: data
+  };
+});
+
+//console.log('td',test_data);
+
+var negative_test_data = new d3.range(0,3).map(function(d,i) {
+
+    var tempflag = false;
+    if(i==2){
+        tempflag = true;
+    }
+
+    var testKey;
+    if(i==0) testKey = 'Positive';
+    if(i==1) testKey = 'Neutral';
+    if(i==2) testKey = 'Negative';
+
+    return {
+    key: testKey,
+    enabletext: tempflag,
+    values: new d3.range(0,8).map( function(f,j) {
+      var xLabel;
+      if(j==0) xLabel = "No Tag";
+      if(j==1) xLabel = "Football";
+      if(j==2) xLabel = "Baseball";
+      if(j==3) xLabel = "Survivor";
+      if(j==4) xLabel = "Games";
+      if(j==5) xLabel = "Coca Cola";
+      if(j==6) xLabel = "Other";
+      if(j==7) xLabel = "Misc";
+
+      var yVal = Math.random()*100;
+      //TEST//if(j==0) yVal = 0;
+    return { 
+             //y: Math.abs(10 + Math.random()*100 * (Math.floor(Math.random()*100)%2 ? 1 : -1)),
+             //y: Math.random()*100,
+             y: yVal,
+             //x: 'TTT'+j
+             x: xLabel,
+             label: 145
+           }
+  })
+  };  
+});
+
+var chart;
+nv.addGraph(function() {
+    chart = nv.models.multiBarGroupChart()
+        // PK: Make sure that each series has its own color in different groups
+      //.barColor(d3.scale.category20().range())
+      .margin({bottom: 100})
+      .transitionDuration(300)
+      .delay(0)
+      // PK Dont rotate the labels
+      //.rotateLabels(45)
+      //.groupSpacing(0.1)
+      ;
+
+    chart.multibar
+      .hideable(true);
+
+      // Avoid any staggering of the labels
+    //chart.reduceXTicks(false).staggerLabels(true);
+
+    //chart.xAxis
+    //    //.axisLabel("Current Index")
+    //    .showMaxMin(true)
+    //    //.tickFormat(d3.format(',.6f'))
+    //    ;
+
+    chart.yAxis
+        .tickFormat(d3.format(',f'));
+
+    chart.chartTitle("Brand Engagement");
+    chart.yAxisLabel("Engagement");
+    chart.xAxisLabel("Tags");
+    chart.color(['#47629e', '#dee5e4', '#c64659']);
+    // Disable controls as it will interfere with the yDomain because if you are stakced the domain might change
+    chart.showControls(false);
+
+    chart.stacked(true);
+
+    // Set y-domain to show 0-100% always, only for percentage values
+    //chart.multibar.yDomain([0,100]);
+
+    chart.valueFormat(function(d,i){ return '+ ' + d3.format('.2f')(d) + '%'});
+    //chart.getY0(function(d,i){ return d.y});
+
+    d3.select('#chart1 svg')
+        .datum(negative_test_data)
+       .call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    chart.dispatch.on('stateChange', function(e) { nv.log('New State:', JSON.stringify(e)); });
+
+    return chart;
+});
+
+
+
+
+</script>
