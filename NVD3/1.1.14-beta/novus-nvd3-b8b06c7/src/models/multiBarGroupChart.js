@@ -7,12 +7,13 @@ nv.models.multiBarGroupChart = function() {
 
   var multibar = nv.models.multiBarGroup()
     , xAxis = nv.models.axis()
+    , xAxisTicks = nv.models.axis()
     , yAxis = nv.models.axis()
-    , legend = nv.models.legend()
+    , legend = nv.models.vxLegend()
     , controls = nv.models.legend()
     ;
 
-  var margin = {top: 60, right: 20, bottom: 50, left: 60}
+  var margin = {top: 60, right: 20, bottom: 50, left: 70}
     , width = null
     , height = null
     , color = nv.utils.defaultColor()
@@ -31,6 +32,7 @@ nv.models.multiBarGroupChart = function() {
       }
     , x //can be accessed via chart.xScale()
     , y //can be accessed via chart.yScale()
+    , tick_scale = d3.scale.linear()
     , state = { stacked: false }
     , defaultState = null
     , noData = "No Data Available."
@@ -48,12 +50,19 @@ nv.models.multiBarGroupChart = function() {
     ;
   xAxis
     .orient('bottom')
-    .tickPadding(7)
-    .highlightZero(true)
+    .tickPadding(10)
     .showMaxMin(false)
     .tickFormat(function(d) { return d })
     ;
+  xAxisTicks
+    .orient('bottom')
+    .tickPadding(7)
+    .showMaxMin(false)
+    .tickFormat(function(d) { return '' })
+    ;
   yAxis
+    .tickPadding(5)
+    .showMaxMin(false)
     .orient((rightAlignYAxis) ? 'right' : 'left')
     .tickFormat(d3.format(',.1f'))
     ;
@@ -133,10 +142,12 @@ nv.models.multiBarGroupChart = function() {
           .data([chartTitle])
           .enter()
           .append('text')
+          .attr('class', 'nvd3 nv-charttitle')
           .attr('x', availableWidth/2)
           .attr('y', 30)
           .attr("text-anchor", "middle")
-          .attr("style", chartTitleStyle)
+          // Handled by CSS now
+          //.attr("style", chartTitleStyle)
           .text(function(d){return d});
 
 
@@ -145,7 +156,6 @@ nv.models.multiBarGroupChart = function() {
 
       x = multibar.xScale();
       y = multibar.yScale();
-
       //------------------------------------------------------------
 
 
@@ -157,10 +167,14 @@ nv.models.multiBarGroupChart = function() {
       var g = wrap.select('g');
 
       gEnter.append('g').attr('class', 'nv-x nv-axis');
-      gEnter.append('g').attr('class', 'nv-y nv-axis');
+      //gEnter.append('g').attr('class', 'nv-y nv-axis');
+      gEnter.append('g').attr('class', 'nv-y nv-axis')
+          .append('g').attr('class', 'nv-zeroLine')
+          .append('line');
       gEnter.append('g').attr('class', 'nv-barsWrap');
       gEnter.append('g').attr('class', 'nv-legendWrap');
       gEnter.append('g').attr('class', 'nv-controlsWrap');
+      gEnter.append('g').attr('class', 'nv-x-ticks nv-axis');
 
       //------------------------------------------------------------
 
@@ -248,7 +262,9 @@ nv.models.multiBarGroupChart = function() {
           xAxis
             .scale(x)
             .ticks( availableWidth / 100 )
-            .tickSize(-availableHeight, 0);
+            //.tickSize(-availableHeight, 0)
+            .tickSize(0)
+            ;
 
           g.select('.nv-x.nv-axis')
               .attr('transform', 'translate(0,' + y.range()[0] + ')');
@@ -299,6 +315,20 @@ nv.models.multiBarGroupChart = function() {
               .style('opacity', 1);
       }
 
+      // Display the ticks
+      tick_scale.domain([0, data.length]);
+      tick_scale.range([0, availableWidth]);
+      xAxisTicks
+        .scale(tick_scale)
+        .tickValues(tick_scale.ticks(data.length).slice(1,-1))
+        .tickSize(7)
+        ;
+
+      g.select('.nv-x-ticks.nv-axis')
+          .attr('transform', 'translate(0,' + y.range()[0] + ')');
+      g.select('.nv-x-ticks.nv-axis').transition()
+          .call(xAxisTicks);
+      // End Display the ticks
 
       if (showYAxis) {
           y.nice();      
@@ -312,8 +342,17 @@ nv.models.multiBarGroupChart = function() {
           g.select('.nv-y.nv-axis').transition()
               .call(yAxis);
           
-          g.select('.nv-y.nv-axis').select('.nv-axis').select('.nv-axislabel')
-              .attr("style", yAxisLabelStyle);
+          //g.select('.nv-y.nv-axis').select('.nv-axis').select('.nv-axislabel')
+          //    .attr("style", yAxisLabelStyle);
+
+          g.select('.nv-zeroLine line')
+            .attr("x1", 0)
+            .attr("x2", availableWidth)
+            .attr("y1", availableHeight)
+            .attr("y2", availableHeight)
+            // UPDATE: Handled by CSS now
+            //.attr('style', 'stroke:#6bc1c1; stroke-width:2px')
+            ;
       }
 
 
@@ -417,7 +456,7 @@ nv.models.multiBarGroupChart = function() {
   chart.yAxis = yAxis;
 
   d3.rebind(chart, multibar, 'x', 'y', 'xDomain', 'yDomain', 'xRange', 'yRange', 'forceX', 'forceY', 'clipEdge',
-   'id', 'stacked', 'stackOffset', 'delay', 'barColor','groupSpacing', 'valueFormat', 'getY0');
+   'id', 'stacked', 'stackOffset', 'delay', 'barColor','groupSpacing', 'barSpacing', 'valueFormat', 'getY0');
 
   chart.options = nv.utils.optionsFunc.bind(chart);
   
