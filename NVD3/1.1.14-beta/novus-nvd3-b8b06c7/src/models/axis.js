@@ -19,6 +19,7 @@ nv.models.axis = function() {
     , staggerLabels = false
     , isOrdinal = false
     , ticks = null
+    , numTicks = null
     , axisLabelDistance = 12 //The larger this number is, the closer the axis label is to the axis.
     ;
 
@@ -56,9 +57,11 @@ nv.models.axis = function() {
       //------------------------------------------------------------
 
 
-      if (ticks !== null)
+      if ((ticks !== null) && (numTicks !== null)) {
+        axis.ticks(ticks, numTicks);
+      } else if (ticks !== null) {
         axis.ticks(ticks);
-      else if (axis.orient() == 'top' || axis.orient() == 'bottom')
+      } else if (axis.orient() == 'top' || axis.orient() == 'bottom')
         axis.ticks(Math.abs(scale.range()[1] - scale.range()[0]) / 100);
 
 
@@ -338,9 +341,13 @@ nv.models.axis = function() {
     return chart;
   };
 
-  chart.ticks = function(_) {
+  chart.ticks = function(_, __) {
     if (!arguments.length) return ticks;
-    ticks = _;
+    if (arguments.length == 1) ticks = _;
+    if (arguments.length == 2){
+        ticks = _;
+        numTicks = __;
+    }
     return chart;
   };
 

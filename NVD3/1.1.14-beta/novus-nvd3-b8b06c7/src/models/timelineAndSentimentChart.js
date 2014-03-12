@@ -107,6 +107,7 @@ nv.models.timelineAndSentimentChart = function() {
     ;
   x3Axis
     .orient('bottom')
+    // Controls distance of y-axis-tick-labels to the y-axis line
     .tickPadding(5)
     .tickFormat(function(d,i){return '';})
     ;
@@ -588,7 +589,9 @@ nv.models.timelineAndSentimentChart = function() {
 
       xAxis
         .scale(x)
-        .ticks( availableWidth / 100 )
+        //.ticks( availableWidth / 100 )
+        // UPDATE: You can select the time interval (in minutes) you want to display on x-axis
+        .ticks(d3.time.minutes, 15)
         .axisLabel(xAxisLabel)
         //.tickSize(-heightFocus, 0)
         .axisLabelDistance(50)
@@ -598,7 +601,6 @@ nv.models.timelineAndSentimentChart = function() {
       yAxis
         .scale(y)
         .ticks( heightFocus / 60 )
-        //.ticks( 4 )
         .axisLabel(yAxisLabel)
         .axisLabelDistance(20)
         .tickSize( -availableWidth, 0);
