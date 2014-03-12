@@ -63,10 +63,16 @@ nv.models.discreteBar = function() {
               })
             });
 
+      console.log('xRange : ' + xRange);
+
       x   .domain(xDomain || d3.merge(seriesData).map(function(d) { return d.x }))
-          .rangeBands(xRange || [0, availableWidth], .1);
+          //.rangeBands(xRange || [0, availableWidth], .1);
+          // TODO : Currently cant pass xRange from linearDiscreteBar....js
+          .rangeBands(xRange || [0, availableWidth], .2, .1);
 
       y   .domain(yDomain || d3.extent(d3.merge(seriesData).map(function(d) { return d.y }).concat(forceY)));
+      // PK: To ensure the nice-ness of the y-axis
+      y.nice();
 
       // If showValues, pad the Y axis range to account for label height
       if (showValues) y.range(yRange || [availableHeight - (y.domain()[0] < 0 ? 12 : 0), y.domain()[1] > 0 ? 12 : 0]);
@@ -112,7 +118,9 @@ nv.models.discreteBar = function() {
       groups
           .transition()
           .style('stroke-opacity', 1)
-          .style('fill-opacity', .75);
+          //.style('fill-opacity', .75);
+          // PK: Changing the opacity to 1
+          .style('fill-opacity', 1);
 
 
       var bars = groups.selectAll('g.nv-bar')
