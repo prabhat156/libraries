@@ -25,6 +25,71 @@ text {
 */
 }
 
+.nvd3 .nv-legend .disabled rect {
+  fill-opacity: 0;
+}
+.nvd3 .nv-legend .disabled path {
+  fill-opacity: 0;
+}
+
+.nvd3 .nv-axis line {
+  fill: none;
+  stroke: #b6c1c1;
+  shape-rendering: crispEdges;
+}
+
+.nvd3 .nv-axis text {
+    fill: #3c4f54;
+    font-size: 11pt;
+}
+
+.nvd3 .nv-axis .nv-axislabel {
+    font-family: Helvetica;
+    font-size: 12pt;
+    fill: #3c4f54;
+    font-weight: bold;
+}
+
+.nvd3.nv-charttitle {
+    font-family: Helvetica;
+    font-size: 16pt;
+    fill: #3c4f54;
+    font-weight: normal;
+}
+
+/* Legend Styling*/
+.nvd3 .nv-legend text {
+    font-size: 12pt;
+    font-family: Helvetica;
+    fill: #3c4f54;
+}
+
+/* This is to make the vertical line at x=0 disappear*/
+.nvd3 .nv-axis path {
+  stroke: #ffffff;
+}
+
+
+/* Width of zeroLine = 2px*/
+.nvd3 .nv-y.nv-axis .nv-zeroLine line {
+    stroke-width: 2px;
+}
+
+/* Width of zeroLine = 2px*/
+.nvd3 .nv-y.nv-axis .nv-zeroLine line {
+    stroke-width: 2px;
+}
+
+/* Width of horizontal tick lines = 1px*/
+.nvd3 .nv-y.nv-axis line {
+    stroke-width: 1px;
+}
+
+/* Width of ticks on x-axis = 2px*/
+.nvd3 .nv-x-ticks.nv-axis line{
+    stroke-width: 2px;
+}
+
 </style>
 <body>
 
@@ -37,6 +102,8 @@ text {
 <script src="../src/tooltip.js"></script>
 <script src="../src/utils.js"></script>
 <script src="../src/models/legend.js"></script>
+<script src="../src/models/vxLegend.js"></script>
+<script src="../src/models/vxLegendSmall.js"></script>
 <script src="../src/models/axis.js"></script>
 <script src="../src/models/multiBarGroup.js"></script>
 <script src="../src/models/multiBarGroupChart.js"></script>
@@ -44,9 +111,12 @@ text {
 <script>
 
 var test_data = stream_layers(3,10+Math.random()*100,.1).map(function(data, i) {
-//var test_data = stream_layers(3,1,.1).map(function(data, i) { //for testing single data point
+    var testKey;
+    if(i==0) testKey = 'Positive';
+    if(i==1) testKey = 'Neutral';
+    if(i==2) testKey = 'Negative';
   return {
-    key: 'Stream' + i,
+    key: testKey,
     values: data
   };
 });
@@ -59,21 +129,35 @@ var negative_test_data = new d3.range(0,3).map(function(d,i) {
     if(i==2){
         tempflag = true;
     }
-    
+
+    var testKey;
+    if(i==0) testKey = 'Positive';
+    if(i==1) testKey = 'Neutral';
+    if(i==2) testKey = 'Negative';
+
     return {
-  key: 'Stream' + i,
-  enabletext: tempflag,
-  values: new d3.range(0,3).map( function(f,j) {
+    key: testKey,
+    enabletext: tempflag,
+    values: new d3.range(0,8).map( function(f,j) {
       var xLabel;
-      if(j==0) xLabel = "AMA";
-      if(j==1) xLabel = "Amazing Race";
-      if(j==2) xLabel = "CMA";
+      if(j==0) xLabel = "No Tag";
+      if(j==1) xLabel = "Football";
+      if(j==2) xLabel = "Baseball";
+      if(j==3) xLabel = "Survivor";
+      if(j==4) xLabel = "Games";
+      if(j==5) xLabel = "Coca Cola";
+      if(j==6) xLabel = "Other";
+      if(j==7) xLabel = "Misc";
+
+      var yVal = Math.random()*100;
+      //TEST//if(j==0) yVal = 0;
     return { 
              //y: Math.abs(10 + Math.random()*100 * (Math.floor(Math.random()*100)%2 ? 1 : -1)),
-             y: Math.random()*100,
-             y0 : 145,
+             //y: Math.random()*100,
+             y: yVal,
              //x: 'TTT'+j
-             x: xLabel
+             x: xLabel,
+             label: 145
            }
   })
   };  
@@ -89,7 +173,7 @@ nv.addGraph(function() {
       .delay(0)
       // PK Dont rotate the labels
       //.rotateLabels(45)
-      .groupSpacing(0.1)
+      //.groupSpacing(0.1)
       ;
 
     chart.multibar
@@ -98,22 +182,26 @@ nv.addGraph(function() {
       // Avoid any staggering of the labels
     //chart.reduceXTicks(false).staggerLabels(true);
 
-    chart.xAxis
-        //.axisLabel("Current Index")
-        .showMaxMin(true)
-        //.tickFormat(d3.format(',.6f'))
-        ;
+    //chart.xAxis
+    //    //.axisLabel("Current Index")
+    //    .showMaxMin(true)
+    //    //.tickFormat(d3.format(',.6f'))
+    //    ;
 
     chart.yAxis
-        .tickFormat(d3.format(',.1f'));
+        .tickFormat(d3.format(',f'));
 
     chart.chartTitle("Brand Engagement");
-    chart.yAxisLabel("% of users shared with program");
-    chart.color([d3.scale.category20().range()[0], d3.scale.category20().range()[2], d3.scale.category20().range()[6]]);
+    chart.yAxisLabel("Engagement");
+    chart.xAxisLabel("Tags");
+    chart.color(['#47629e', '#dee5e4', '#c64659']);
     // Disable controls as it will interfere with the yDomain because if you are stakced the domain might change
     chart.showControls(false);
-    // Set y-domain to show 0-100% always
-    chart.multibar.yDomain([0,100]);
+
+    chart.stacked(false);
+
+    // Set y-domain to show 0-100% always, only for percentage values
+    //chart.multibar.yDomain([0,100]);
 
     chart.valueFormat(function(d,i){ return '+ ' + d3.format('.2f')(d) + '%'});
     //chart.getY0(function(d,i){ return d.y});
