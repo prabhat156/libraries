@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<link href="../src/nv.d3.css" rel="stylesheet" type="text/css">
+
+<style>
+
+body {
+  overflow-y:scroll;
+}
+
+text {
+  font: 12px sans-serif;
+}
+
+svg {
+  display: block;
+}
+
+#chart1 svg{
+  height: 500px;
+  min-width: 100px;
+  min-height: 100px;
+/*
+  margin: 10px;
+  Minimum height and width is a good idea to prevent negative SVG dimensions...
+  For example width should be =< margin.left + margin.right + 1,
+  of course 1 pixel for the entire chart would not be very useful, BUT should not have errors
+  */
+}
+
+/* Chart Title Styling*/ 
+.nvd3.nv-charttitle {
+    font-family: Helvetica;
+    font-size: 16pt;
+    fill: #3c4f54;
+    font-weight: normal;
+}
+.nvd3 .nv-axis text {
+    fill: #3c4f54;
+    font-size: 11pt;
+}
+
+.nvd3 .nv-axis .nv-axislabel {
+    font-family: Helvetica;
+    font-size: 12pt;
+    fill: #3c4f54;
+    font-weight: bold;
+}
+/* This is to make the vertical line at x=0 disappear*/
+.nvd3 .nv-axis path {
+  stroke: #ffffff;
+}
+
+/* Width of zeroLine = 2px*/
+.nvd3 .nv-y.nv-axis .nv-zeroLine line {
+    stroke-width: 2px;
+}
+
+/* Width of horizontal tick lines = 1px*/
+.nvd3 .nv-y.nv-axis line {
+    stroke-width: 1px;
+}
+
+/* Width of ticks on x-axis = 2px*/
+.nvd3 .nv-x-ticks.nv-axis line{
+    stroke-width: 2px;
+}
+</style>
+<body>
+
+  <div id="chart1">
+    <svg></svg>
+  </div>
+
+<script src="../lib/d3.v3.js"></script>
+<script src="../nv.d3.js"></script>
+<!-- including all the components so I don't have to minify every time I test in development -->
+<script src="../src/tooltip.js"></script>
+<script src="../src/utils.js"></script>
+<script src="../src/models/axis.js"></script>
+<script src="../src/models/linearDiscreteBar.js"></script>
+<script src="../src/models/discreteBar.js"></script>
+<script src="../src/models/discreteBarPlusLineChartPan.js"></script>
+<script>
+
+//SORT-TEST//historicalBarChart = [
+//SORT-TEST//    {
+//SORT-TEST//        key: "Tweet Frequency",
+//SORT-TEST//        bar: "true",
+//SORT-TEST//        //values: d3.range(100).map(function(d){return {"label" : "Test"+d, "value" : 100*Math.random()}})
+//SORT-TEST//        //values: d3.range(100).map(function(d){return {"label" : "Test"+d, "value" : 1000*Math.random()}})
+//SORT-TEST//        values: d3.range(100).map(function(d){return {"label" : "Test"+d, "value" : 1000*Math.random()}})
+//SORT-TEST//        //values: d3.range(100).map(function(d){return {"label" : "TEST AMA Streaming"+d, "value" : 1000*Math.random()}})
+//SORT-TEST//        //values: d3.range(100).map(function(d,i){return {"label" : "Test"+d, "value" : 10*(100-i)}})
+//SORT-TEST//    },
+//SORT-TEST//    {
+//SORT-TEST//        key: "Tweets per User",
+//SORT-TEST//        //values: []
+//SORT-TEST//        values: d3.range(100).map(function(d){return {"label" : "Test"+d, "value" : Math.random()}})
+//SORT-TEST//    }
+//SORT-TEST//].map(function(d){
+//SORT-TEST//    if(d.bar){
+//SORT-TEST//        return {
+//SORT-TEST//            key : d.key,
+//SORT-TEST//            bar : d.bar,
+//SORT-TEST//            values : d.values.sort(
+//SORT-TEST//            function(a, b){
+//SORT-TEST//                if(a.value < b.value)
+//SORT-TEST//                    return 1;
+//SORT-TEST//                if(a.value > b.value)
+//SORT-TEST//                    return -1;
+//SORT-TEST//                return 0;
+//SORT-TEST//            })
+//SORT-TEST//        };
+//SORT-TEST//    } else {
+//SORT-TEST//        return d;
+//SORT-TEST//    }
+//SORT-TEST//});
+
+
+historicalBarChart = [
+    {
+        key: "Tweet Frequency",
+        bar: "true",
+        values: d3.range(8).map(function(d, i){
+            var imageloc;
+            if(i==0 || i==4)  imageloc = "http://www.ttcarcentral.com/news/wp-content/uploads/2012/12/logo-audi-jpg.jpg";
+            if(i==1 || i==5)  imageloc = "http://www.autojunction.in/wcsstore/AJStore/images/content/news/HMIL-Logo.jpg";
+            if(i==2 || i==6)  imageloc = "http://files.myopera.com/Amiraj/albums/3085371/Mini-Logo.jpg";
+            if(i==3 || i==7)  imageloc = "http://i00.i.aliimg.com/photo/v1/558742302/high_quality_car_logos_with_names.jpg_250x250.jpg";
+            return {
+                "label" : "Test"+d,
+                "value" : 10000000*Math.random(),
+                //"image" : "http://www.e-pint.com/epint.jpg"
+                "image" : imageloc
+            }
+        })
+    }
+];
+
+
+//historicalBarChart = [ 
+//  {
+//    key: "Tweet Frequency",
+//    bar: "true",
+//    values: [
+//      { 
+//        "label" : "A" ,
+//        "value" : 29.765957771107
+//      } , 
+//      { 
+//        "label" : "B" , 
+//        "value" : 23.4433
+//      } , 
+//      { 
+//        "label" : "C" , 
+//        "value" : 32.807804682612
+//      } , 
+//      { 
+//        "label" : "D" , 
+//        "value" : 196.45946739256
+//      } , 
+//      { 
+//        "label" : "E" ,
+//        "value" : 10.19434030906893
+//      } , 
+//      { 
+//        "label" : "F" , 
+//        "value" : 98.079782601442
+//      } , 
+//      { 
+//        "label" : "G" , 
+//        "value" : 253.925743130903
+//      } , 
+//      { 
+//        "label" : "H" , 
+//        "value" : 5.1387322875705
+//      }, 
+//      { 
+//        "label" : "I" ,
+//        "value" : 29.765957771107
+//      } , 
+//      { 
+//        "label" : "J" , 
+//        "value" : 23.4433
+//      } , 
+//      { 
+//        "label" : "K" , 
+//        "value" : 32.807804682612
+//      } , 
+//      { 
+//        "label" : "L" , 
+//        "value" : 196.45946739256
+//      } , 
+//      { 
+//        "label" : "M" ,
+//        "value" : 20.19434030906893
+//      } , 
+//      { 
+//        "label" : "N" , 
+//        "value" : 98.079782601442
+//      } , 
+//      { 
+//        "label" : "O" , 
+//        "value" : 253.925743130903
+//      } , 
+//      { 
+//        "label" : "P" , 
+//        "value" : 5.1387322875705
+//      } 
+//    ]
+//  },
+//  {
+//    key: "Tweet Per User",
+//    values: [
+//      { 
+//        "label" : "A" ,
+//        "value" : 9.765957771107
+//      } , 
+//      { 
+//        "label" : "B" , 
+//        "value" : 3.4433
+//      } , 
+//      { 
+//        "label" : "C" , 
+//        "value" : 2.807804682612
+//      } , 
+//      { 
+//        "label" : "D" , 
+//        "value" : 6.45946739256
+//      } , 
+//      { 
+//        "label" : "E" ,
+//        "value" : 1.4
+//      } , 
+//      { 
+//        "label" : "F" , 
+//        "value" : 8.079782601442
+//      } , 
+//      { 
+//        "label" : "G" , 
+//        "value" : 3.925743130903
+//      } , 
+//      { 
+//        "label" : "H" , 
+//        "value" : 5.1387322875705
+//      }, 
+//      { 
+//        "label" : "I" ,
+//        "value" : 9.765957771107
+//      } , 
+//      { 
+//        "label" : "J" , 
+//        "value" : 3.4433
+//      } , 
+//      { 
+//        "label" : "K" , 
+//        "value" : 2.807804682612
+//      } , 
+//      { 
+//        "label" : "L" , 
+//        "value" : 6.45946739256
+//      } , 
+//      { 
+//        "label" : "M" ,
+//        "value" : 0.19434030906893
+//      } , 
+//      { 
+//        "label" : "N" , 
+//        "value" : 8.079782601442
+//      } , 
+//      { 
+//        "label" : "O" , 
+//        "value" : 3.925743130903
+//      } , 
+//      { 
+//        "label" : "P" , 
+//        "value" : 5.1387322875705
+//      } 
+//    ]
+//  }
+//];
+
+
+
+//historicalBarChart = [ 
+//  {
+//    key: "Cumulative Return",
+//    values: [
+//      { 
+//        "label" : "A" ,
+//        "value" : 29.765957771107
+//      } , 
+//      { 
+//        "label" : "B" , 
+//        "value" : 0
+//      } , 
+//      { 
+//        "label" : "C" , 
+//        "value" : 32.807804682612
+//      } , 
+//      { 
+//        "label" : "D" , 
+//        "value" : 196.45946739256
+//      } , 
+//      { 
+//        "label" : "E" ,
+//        "value" : 0.19434030906893
+//      } , 
+//      { 
+//        "label" : "F" , 
+//        "value" : 98.079782601442
+//      } , 
+//      { 
+//        "label" : "G" , 
+//        "value" : 253.925743130903
+//      } , 
+//      { 
+//        "label" : "H" , 
+//        "value" : 5.1387322875705
+//      } ,
+//      { 
+//        "label" : "I" , 
+//        "value" : 117.1387322875705
+//      } ,
+//      { 
+//        "label" : "J" , 
+//        "value" : 2.1387322875705
+//      } ,
+//      { 
+//        "label" : "K" , 
+//        "value" : 189.1387322875705
+//      } ,
+//      { 
+//        "label" : "L" , 
+//        "value" : 6.1387322875705
+//      } ,
+//      { 
+//        "label" : "M" , 
+//        "value" : 121.1387322875705
+//      } ,
+//      { 
+//        "label" : "N" , 
+//        "value" : 4.1387322875705
+//      }
+//    ]
+//  }
+//];
+
+
+nv.addGraph(function() { 
+
+  var chartColors = [d3.scale.category20().range()[0], d3.scale.category20().range()[6]];  
+  var chart = nv.models.discreteBarPlusLineChartPan()
+      .x(function(d) { return d.label })
+      .y(function(d) { return d.value })
+      //.staggerLabels(true)
+      .staggerLabels(false)
+      //.staggerLabels(historicalBarChart[0].values.length > 8)
+      .tooltips(true)
+      //.showValues(true)
+      .showValues(false)
+      .transitionDuration(250)
+      //.color(['#aec7e8'])
+      //GOLD//.margin({top: 15, right: 80, bottom: 150, left: 80})
+      .margin({top: 60, right: 80, bottom: 80, left: 80})
+      //.margin({top: 15, right: 0, bottom: 50, left: 0})
+      //.rotateLabels(-90)
+      .chartTitle("Network Distribution")
+      //.color([d3.scale.category20().range()[0], d3.scale.category20().range()[6]])
+      .color(['#572b60'])
+      .xAxisLabel("")
+      .yAxisLabel("% of Shows")
+      .showLegend(false)
+      //.plotWidth(4000)
+      .tooltipContent(
+      function(key,x,y,y2,e,graph){
+
+          var barColor = chartColors[0];
+          var lineColor = chartColors[1];
+            return '<h3>' + x +'<h3>' +
+                    '<p>' +  
+                  '<div align="left" style="color:' + barColor + '">' + 'Unique Tweeters: ' + y + '&nbsp &nbsp &nbsp &nbsp' +'</div>' + 
+                  //'<div align="left" style="color:' + barColor + '">' + 'Unique Tweeters: ' + y +'</div>' + 
+                  '<div align="right" style="color:' + lineColor + '">'+ 'Tweets per User: ' + y2 + '</div>' +
+                  //'<div style="color:' + barColor + '">' + 'Unique Tweeters: ' + y +'</div>' + 
+                  //'<div style="color:' + lineColor + '">'+ 'Tweets per User: ' + y2 + '</div>' +
+                  '</p>';
+        })
+      ;
+
+      chart.displayXImageLabel(true);
+  d3.select('#chart1 svg')
+      .datum(historicalBarChart)
+      .call(chart);
+
+  nv.utils.windowResize(chart.update);
+
+  return chart;
+});
+
+//TEST//d3.select('#chart1 svg')
+//TEST//  .append("text")
+//TEST//  .attr("x", 600)             
+//TEST//  .attr("y", 50)
+//TEST//  .attr("text-anchor", "middle")  
+//TEST//  .text("Sample Charts");
+
+
+</script>
