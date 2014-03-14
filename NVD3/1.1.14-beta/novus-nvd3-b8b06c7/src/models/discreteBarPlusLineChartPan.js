@@ -460,21 +460,22 @@ nv.models.discreteBarPlusLineChartPan = function() {
               .attr('transform', 'translate(0,' + (y.range()[0] + ((discretebar.showValues() && y.domain()[0] < 0) ? 16 : 0)) + ')')
               ;
 
-        // TODO: Currently Not the best way of implementing this
+        // Adding image to the x-axis label, Currently deleting the text
         if(displayXImageLabel){
-            // PK: Adding images in place of x-axis-labels
-            var xAxisImages = dataBars[0].values.map(function(d){ return d.image}); 
-            var xAxisImageWrap = g.select('.nv-x.nv-axis').selectAll('.tick.major')
-                        .each(function(d,i){
-                            d3.select(this).selectAll('image').remove();
-                            d3.select(this).selectAll('text').remove();
-                            d3.select(this)
-                              .append('svg:image')
-                              .attr("xlink:href", xAxisImages[i])
-                              .attr("width", 80)
-                              .attr("height", 60)
-                              .attr("x", "-40");
-                        });
+            // Remove the text label
+            g.select('.nv-x.nv-axis').selectAll('.tick.major').selectAll('text').remove();
+            // Add the image label
+            g.select('.nv-x.nv-axis').selectAll('.tick.major').selectAll('image')
+                  .data(function(d, i){
+                      return [ dataBars[0].values[i].image ];
+                  })
+                  .enter()
+                  .append('svg:image')
+                  .attr("xlink:href", function(d){ return d; })
+                  .attr("width", 80)
+                  .attr("height", 60)
+                  .attr("x", "-40");
+                  ;
         }
       }
 
