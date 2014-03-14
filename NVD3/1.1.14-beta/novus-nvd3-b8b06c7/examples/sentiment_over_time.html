@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<link href="../src/nv.d3.css" rel="stylesheet" type="text/css">
+
+<style>
+
+body {
+  overflow-y:scroll;
+}
+
+text {
+  font: 12px sans-serif;
+}
+
+svg {
+  display: block;
+}
+
+#chart1 svg {
+  height: 600px;
+  min-width: 100px;
+  min-height: 100px;
+/*
+  margin: 50px;
+  Minimum height and width is a good idea to prevent negative SVG dimensions...
+  For example width should be =< margin.left + margin.right + 1,
+  of course 1 pixel for the entire chart would not be very useful, BUT should not have errors
+*/
+}
+/*
+    To enable dots to be visible on the line chart
+*/
+.nvd3 .nv-legend .disabled rect {
+  fill-opacity: 0;
+}
+.nvd3 .nv-legend .disabled path {
+  fill-opacity: 0;
+}
+
+.nvd3 .nv-axis line {
+  fill: none;
+  stroke: #b6c1c1;
+  shape-rendering: crispEdges;
+}
+
+/* This is to make the vertical line at x=0 disappear*/
+.nvd3 .nv-axis path {
+  stroke: #ffffff;
+}
+.nvd3 .nv-axis text {
+    fill: #3c4f54;
+    font-size: 11pt;
+}
+
+.nvd3 .nv-axis .nv-axislabel {
+    font-family: Helvetica;
+    font-size: 12pt;
+    fill: #3c4f54;
+    font-weight: bold;
+}
+
+.nvd3.nv-charttitle {
+    font-family: Helvetica;
+    font-size: 16pt;
+    fill: #3c4f54;
+    font-weight: normal;
+}
+
+/* Legend Styling*/
+.nvd3 .nv-legend text {
+    font-size: 12pt;
+    font-family: Helvetica;
+    fill: #3c4f54;
+}
+
+/* TABLE STYLING */
+.nvtooltip table
+{
+    width:460px;
+    height:200px;
+    margin: 6px;
+    border-spacing:0;
+}
+/* First column bold */
+.nvtooltip table tbody tr td:nth-child(1) {
+    font-weight:bold;
+}
+
+/* Alternate rows colored */
+.nvtooltip table tbody tr:nth-child(odd) {
+    background-color: #edf6f4;
+}
+
+/* Alternate rows colored */
+.nvtooltip table tbody tr:nth-child(even) {
+  background-color: white;
+}
+
+.nvtooltip table tbody td:nth-child(1) {
+  -webkit-border-top-left-radius: 6px;
+  -moz-border-top-left-radius: 6px;
+  border-top-left-radius: 6px;
+  -webkit-border-bottom-left-radius: 6px;
+  -moz-border-bottom-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+}
+
+.nvtooltip table tbody td:nth-child(3) {
+  -webkit-border-top-right-radius: 6px;
+  -moz-border-top-right-radius: 6px;
+  border-top-right-radius: 6px;
+  -webkit-border-bottom-right-radius: 6px;
+  -moz-border-bottom-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
+.nvtooltip table td {
+    padding: 0px;
+    vertical-align: middle;
+    font-size:12pt;
+    height:30px;
+    font-family:Helvetica;
+    color:#677070;
+    text-align:center;
+}
+
+.nvtooltip table th {
+    padding: 0px;
+    vertical-align: middle;
+    font-size:10pt;
+    font-weight:bold;
+    height:30px;
+    font-family:Helvetica;
+    color:#677070;
+    text-align:center;
+}
+/* TABLE STYLING END*/
+
+.nvtooltip {
+  position: absolute;
+  background-color: rgba(255,255,255,1.0);
+  padding: 1px;
+  //border: 1px solid rgba(0,0,0,.2);
+  border: 1px solid rgba(118,160,165,0);
+  z-index: 10000;
+
+  font-family: Arial;
+  font-size: 13px;
+  text-align: left;
+  pointer-events: none;
+
+  white-space: nowrap;
+
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.arrow_box {
+    position: absolute;
+    background: #ffffff;
+    border: 1px solid #76a0a5;
+}
+.arrow_box:after, .arrow_box:before {
+    top: 100%;
+    left: 50%;
+    border: solid transparent;
+    content: " ";
+    height: 0;
+    width: 0;
+    position: absolute;
+    pointer-events: none;
+}
+.arrow_box:after {
+    border-color: rgba(255, 255, 255, 0);
+    border-top-color: #ffffff;
+    border-width: 10px;
+    margin-left: -10px;
+}
+.arrow_box:before {
+    border-color: rgba(118, 160, 165, 0);
+    border-top-color: #76a0a5;
+    border-width: 11px;
+    margin-left: -11px;
+}
+
+/********************
+  Box shadow and border radius styling
+*/
+.nvtooltip.with-3d-shadow, .with-3d-shadow .nvtooltip {
+  -moz-box-shadow: 0 2px 1px rgba(34,49,53,.3);
+  -webkit-box-shadow: 0 2px 1px rgba(34,49,53,.3);
+  box-shadow: 0 2px 1px rgba(34,49,53,.3);
+
+  -webkit-border-radius: 1px;
+  -moz-border-radius: 1px;
+  border-radius: 1px;
+}
+
+/* line weight = 3px*/
+.nvd3 .nv-groups path.nv-line {
+  stroke-width: 3px;
+}
+
+/* Width of zeroLine = 2px*/
+.nvd3 .nv-y.nv-axis .nv-zeroLine line {
+    stroke-width: 2px;
+}
+
+/* Width of horizontal tick lines = 1px*/
+.nvd3 .nv-y.nv-axis line {
+    stroke-width: 1px;
+}
+
+/* Width of ticks on x-axis = 2px*/
+.nvd3 .nv-x.nv-axis line{
+    stroke-width: 2px;
+}
+
+/* Line style for marker style 1*/
+.nvd3 .nv-marker .nv-markerStyle-1 line{
+    stroke-width: 3px;
+    stroke-dasharray: 5,5;
+}
+</style>
+<body>
+
+  <div id="chart" class='with-3d-shadow with-transitions'>
+    <svg style="height: 600px;"></svg>
+  </div>
+
+<script src="../lib/d3.v3.js"></script>
+<script src="../nv.d3.js"></script>
+<script src="../src/tooltip.js"></script>
+<script src="../src/utils.js"></script>
+<script src="../src/models/legend.js"></script>
+<script src="../src/models/vxLegendSmall.js"></script>
+<script src="../src/models/vxLegend.js"></script>
+<script src="../src/models/axis.js"></script>
+<script src="../src/models/scatter.js"></script>
+<script src="../src/models/vxMarker.js"></script>
+<script src="../src/models/line.js"></script>
+<script src="../src/models/timelineAndSentimentChart.js"></script>
+<script src="stream_layers.js"></script>
+<script>
+
+var tooltipData = [
+    ['Keyword 1', 88, 7301],
+    ['Keyword 2', 84, 6418],
+    ['Keyword 3', 81, 6592],
+    ['Keyword 4', 80, 5301],
+    ['Keyword 5', 77, 3502]];
+
+// Column format functions
+var tooltipDataColumnFormatters = [
+    function(d){ return d},
+    function(d){ return d+'%'},
+    function(d){ return d3.format(',')(d)}
+    ];
+var tooltipDataHeaders = ['Top Theme', '% Positive Sentiment', 'Volume'];
+
+
+
+
+
+nv.addGraph(function() {
+  var chart = nv.models.timelineAndSentimentChart();
+
+  //OLD//chart.forceY([0]);
+ // chart.transitionDuration(500);
+  //GOLD//chart.xAxis
+  //GOLD//    //.tickFormat(d3.format(',f'));
+  //GOLD//    //.tickFormat(d3.time.format('%H:%M:%S'));
+  //GOLD//    .tickFormat(d3.time.scale().tickFormat());
+  //GOLD//chart.x2Axis
+  //GOLD//    //.tickFormat(d3.format(',f'));
+  //GOLD//    //.tickFormat(d3.time.format('%H:%M:%S'));
+  //GOLD//    .tickFormat(d3.time.scale().tickFormat());
+
+  chart.yAxis
+        .tickFormat(function(d){ return d3.format('s')(d)});
+      //.tickFormat(d3.format(','));
+  chart.y2Axis
+      .tickFormat(d3.format(',.2f'));
+
+      chart.controlCB(function(){
+          alert('This is the control function in html');
+      });
+
+      // Disable Controls
+      /*
+      chart.showControls(true);
+      chart.controlsData([
+        //{key:'Count1', disabled:false, onClick: function(){alert('In count1');}}, 
+        {key:'Count1', disabled:false}, 
+        {key:'Percent1', disabled:true, onClick: function(){alert('In percent1');}}]);
+      */
+
+        //TEST//chart.margin({top: 60, right: 80, bottom: 80, left: 80});
+        chart.chartTitle("Timeline Test Chart");
+
+        chart.xAxisLabel("Time");
+        chart.yAxisLabel("Volume")
+            .y3AxisLabel("+ve sentiment")
+            .color([d3.scale.category20().range()[0], d3.scale.category20().range()[2], d3.scale.category20().range()[6]])
+            ;
+
+        //chart.markerColor(['#7deae2', '#e04be0', '#60242e']);
+        chart.markerColor(['#677070']);
+
+        //chart.extentThreshold(58570*5);
+        //chart.plotSentiment(false);
+
+        /* Tooltip Content Samples*/
+        //chart.tooltipContent(function(e, x, y, e, graph){
+        //    return '<h3>' + e.series.key + '</h3>' + 
+        //    '<p>' + x + '</p>';
+        //});
+        //chart.tooltipContent(function(key, x, y, e, graph){
+        //    return tabulate(tooltipData, tooltipDataHeaders, tooltipDataColumnFormatters);
+        //});
+
+        chart.tooltipContent([
+            function(key,x,y,e,graph){
+                return '<h3>' + e.series.key + '</h3>' + 
+                '<p>' + x + '</p>';
+            },
+            function(key,x,y,e,graph){
+                return tabulate(tooltipData, tooltipDataHeaders, tooltipDataColumnFormatters);
+            }
+        ]);
+
+
+  d3.select('#chart svg')
+      .datum(testData())
+      .call(chart);
+
+  nv.utils.windowResize(chart.update);
+
+  return chart;
+});
+
+
+
+function testData() {
+  //return stream_layers(3,128,.1).map(function(data, i) {
+  //WORK//return stream_layers(3,4,.1).map(function(data, i) {
+  //WORK//  return { 
+  //WORK//    key: 'Stream' + i,
+  //WORK//    values: data
+  //WORK//  };
+  //WORK//});
+
+  //GOLD//return {
+  //GOLD//    timeline : stream_layers(3,128,.1).map(function(data, i) {
+  //GOLD//        return {
+  //GOLD//            key: 'Stream' + i,
+  //GOLD//            values: data
+  //GOLD//        };
+  //GOLD//    }),
+  //GOLD//    sentiment : stream_layers1(3,128,.1).map(function(data, i) {
+  //GOLD//        return {
+  //GOLD//            key: 'Stream' + i,
+  //GOLD//            values: data
+  //GOLD//        };
+  //GOLD//    })
+  //GOLD//};
+
+  //NEW_GOLD//var data = stream_layers(3,128,.1).map(function(data, i) {
+  //NEW_GOLD//              return {
+  //NEW_GOLD//                  key: 'Stream' + i,
+  //NEW_GOLD//                  values: data
+  //NEW_GOLD//              };
+  //NEW_GOLD//          });
+
+  //NEW_GOLD//var sentiment = stream_layers1(3,128,.1).map(function(data, i) {
+  //NEW_GOLD//                  return {
+  //NEW_GOLD//                      key: 'Stream' + i,
+  //NEW_GOLD//                      sentiment : "true",
+  //NEW_GOLD//                      values: data
+  //NEW_GOLD//                  };
+  //NEW_GOLD//              });
+
+  var data = stream_layers_date(3,48,.1).map(function(data, i) {
+                var keyName;
+                var style = 1;
+                if(i==0) style = 1;
+                if(i==0) keyName = "Kohl's";
+                if(i==1) keyName = "Jennifer Lopez";
+                if(i==2) keyName = "Pepsi";
+                return {
+                    //key: 'Stream' + i,
+                    key: keyName,
+                    timeline: "true",
+                    legendStyle: style,
+                    values: data
+                };
+            });
+
+  var sentiment = stream_layers1_date(3,48,.1).map(function(data, i) {
+                var keyName;
+                if(i==0) keyName = "Kohl's";
+                if(i==1) keyName = "Jennifer Lopez";
+                if(i==2) keyName = "Pepsi";
+                    return {
+                        //key: 'Stream' + i,
+                        key: keyName,
+                        sentiment : "true",
+                        values: data
+                    };
+                });
+
+    var events = data.map(
+        function(d, i){ 
+                var val1 = Math.round(47*Math.random());
+                var val2 = Math.round(47*Math.random());
+                var val3 = Math.round(47*Math.random());
+
+                if(i == 0){
+                    return {
+                        key: d.key+'_event',
+                        legendStyle: 3,
+                        linkedTo: 0,
+                        markerStyle: 4,
+                        event: true,
+                        values: d.values.filter(function(d,i){
+                            return i==val1 || i==val2 || i==val3;
+                        })
+                    }
+                } else if(i==1) {
+                    return {
+                        key: d.key+'_event',
+                        legendStyle: 3,
+                        linkedTo: 1,
+                        event: true,
+                        values: d.values.filter(function(d,i){
+                            return i==val1 || i==val2 || i==val3;
+                        })
+                    }
+                } else {
+                    return {
+                        key: d.key+'_event',
+                        legendStyle: 3,
+                        //linkedTo: 2,
+                        event: true,
+                        values: d.values.filter(function(d,i){
+                            return i==val1 || i==val2 || i==val3;
+                        })
+                    }
+                }
+            //GOLD//return {
+            //GOLD//    key: d.key+'_event',
+            //GOLD//    legendStyle: 3,
+            //GOLD//    linkedTo:
+            //GOLD//    event: true,
+            //GOLD//    values: d.values.filter(function(d,i){
+            //GOLD//        return i==val1 || i==val2 || i==val3;
+            //GOLD//    })
+            //GOLD//}
+        });
+
+    // New events to test vxMarker    
+    var newEvents = data.map(
+        function(d, i){ 
+                var val1 = Math.round(47*Math.random());
+                var val2 = Math.round(47*Math.random());
+                var val3 = Math.round(47*Math.random());
+
+                if(i == 0){
+                    return {
+                        key: d.key+'_event',
+                        legendStyle: 3,
+                        linkedTo: 0,
+                        markerStyle: 3,
+                        disableTooltip: true,
+                        event: true,
+                        values: d.values.filter(function(d,i){
+                            return i==val1 || i==val2 || i==val3;
+                        }).map(function(d){ return {x: d.x}})
+                    }
+                } else if(i==1) {
+                    return {
+                        key: d.key+'_event',
+                        legendStyle: 3,
+                        linkedTo: 1,
+                        markerStyle: 1,
+                        event: true,
+                        values: d.values.filter(function(d,i){
+                            return i==val1 || i==val2 || i==val3;
+                        }).map(function(d){ return {x: d.x}})
+                    }
+                } else {
+                    return {
+                        key: d.key+'_event',
+                        legendStyle: 3,
+                        //linkedTo: 2,
+                        event: true,
+                        values: d.values.filter(function(d,i){
+                            return i==val1 || i==val2 || i==val3;
+                        }).map(function(d){ return {x: d.x}})
+                    }
+                }
+            //GOLD//return {
+            //GOLD//    key: d.key+'_event',
+            //GOLD//    legendStyle: 3,
+            //GOLD//    linkedTo:
+            //GOLD//    event: true,
+            //GOLD//    values: d.values.filter(function(d,i){
+            //GOLD//        return i==val1 || i==val2 || i==val3;
+            //GOLD//    })
+            //GOLD//}
+        });
+
+    // New events to test vxMarker    
+    var outlierData = data.map(
+        function(d, i){ 
+                var val1 = Math.round(47*Math.random());
+
+                // TODO If you want a series/marker to not show on legend, use legendStyle = 0, this is a hack but works perfectly well I believe
+            return {
+                key: d.key+'_outlier',
+                legendStyle: 0,
+                linkedTo: i,
+                markerStyle: 4,
+                tooltipFormat: 1,
+                event: true,
+                values: d.values.filter(function(d,i){
+                    return i==val1;
+                }).map(function(d){ return {x: d.x}; })
+            }
+        });
+
+
+  //return data.concat(sentiment, newEvents, outlierData);
+  //return data.concat(sentiment, events);
+  //return data.concat(sentiment);
+  return data;
+}
+
+
+// ===========================================================
+function tabulate(data, columns, columnFormatters) {
+
+    var tableContainer = d3.select(document.createElement("div"));
+    
+    var table = tableContainer.append("table"),
+        thead = table.append("thead"),
+        tbody = table.append("tbody");
+
+    // append the header row
+    thead.append("tr")
+        .selectAll("th")
+        .data(columns)
+        .enter()
+        .append("th")
+            .text(function(column) { return column; });
+
+    // create a row for each object in the data
+    var rows = tbody.selectAll("tr")
+        .data(data)
+        .enter()
+        .append("tr");
+
+    // create a cell in each row for each column
+    var cells = rows.selectAll("td")
+        .data(function(row) {
+            return columns.map(function(column, i) {
+                //return {column: column, value: row[i]};
+                return {column: column, value: columnFormatters[i](row[i])};
+            });
+        })
+        .enter()
+        .append("td")
+            .text(function(d) { return d.value; });
+
+        var tableContent = tableContainer.html();
+        
+    return tableContent;
+}
+// -----------------------------------------------------------
+
+</script>
