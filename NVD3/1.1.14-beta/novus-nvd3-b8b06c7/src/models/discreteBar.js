@@ -22,6 +22,8 @@ nv.models.discreteBar = function() {
     , xRange
     , yRange
     , dispatch = d3.dispatch('chartClick', 'elementClick', 'elementDblClick', 'elementMouseover', 'elementMouseout')
+    , innerPadding = 0.2
+    , outerPadding = 0.1
     , rectClass = 'discreteBar'
     ;
 
@@ -64,9 +66,7 @@ nv.models.discreteBar = function() {
             });
 
       x   .domain(xDomain || d3.merge(seriesData).map(function(d) { return d.x }))
-          //.rangeBands(xRange || [0, availableWidth], .1);
-          // TODO : Currently cant pass xRange from linearDiscreteBar....js
-          .rangeBands(xRange || [0, availableWidth], .2, .1);
+          .rangeBands(xRange || [0, availableWidth], innerPadding, outerPadding);
 
       y   .domain(yDomain || d3.extent(d3.merge(seriesData).map(function(d) { return d.y }).concat(forceY)));
       // PK: To ensure the nice-ness of the y-axis
@@ -303,6 +303,16 @@ nv.models.discreteBar = function() {
   chart.xRange = function(_) {
     if (!arguments.length) return xRange;
     xRange = _;
+    return chart;
+  };
+
+  chart.padding = function() {
+    if (!arguments.length)
+        return [innerPadding, outerPadding];
+    
+    if(arguments.length > 0) innerPadding = arguments[0];
+    if(arguments.length > 1) outerPadding = arguments[1];
+
     return chart;
   };
 

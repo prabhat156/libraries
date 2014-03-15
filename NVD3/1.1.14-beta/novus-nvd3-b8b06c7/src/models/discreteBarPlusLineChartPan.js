@@ -211,11 +211,18 @@ nv.models.discreteBarPlusLineChartPan = function() {
       }
 
       // TODO: You cant pass this way, xRange in discreteBar will take only the first value, i.e., the array and not .2 or .1
-      //BUGGY//discretebar.xRange([0, plotWidth], .2, .1);
-      //BUGGY//if(dataLines.length){
-      //BUGGY//  var tempPadding = lines.scatter.padDataOuter();
-      //BUGGY//  lines.scatter.xRange([(plotWidth * tempPadding +  plotWidth) / (2 *data[0].values.length), plotWidth - plotWidth * (1 + tempPadding) / (2 * data[0].values.length)  ]);
-      //BUGGY//}
+      discretebar
+          .xRange([0, plotWidth])
+          .padding(0.2, 0.1);
+      if(dataLines.length){
+        //OLD//var tempPadding = lines.scatter.padDataOuter();
+        //OLD//lines.scatter.xRange([(plotWidth * tempPadding +  plotWidth) / (2 *data[0].values.length), plotWidth - plotWidth * (1 + tempPadding) / (2 * data[0].values.length)  ]);
+        // IMP: FORMULA : 
+        // x1 = PlotWidth * (2*outerPadding+1-innerPadding)/(2*(length - innerPadding + 2*outerPadding))
+        // x2 = PlotWidth - x1
+        // The below comes when outerPadding = innerPadding/2
+        lines.scatter.xRange([(plotWidth) / (2 *data[0].values.length), plotWidth - plotWidth/(2 * data[0].values.length)  ]);
+      }
       //------------------------------------------------------------
 
       x = discretebar.xScale();
@@ -223,7 +230,7 @@ nv.models.discreteBarPlusLineChartPan = function() {
           .clamp(true)
           ;
       // Define only if line is present
-      if(!dataLines.length){
+      if(dataLines.length){
         y2 = lines.yScale();
       }
 
@@ -444,7 +451,8 @@ nv.models.discreteBarPlusLineChartPan = function() {
           // PK:  Display the ticks seperately
           var numTicks = dataBars[0].values.length;
           tick_scale.domain([0, numTicks]);
-          tick_scale.range([0, availableWidth]);
+          //tick_scale.range([0, availableWidth]);
+          tick_scale.range([0, plotWidth]);
           xAxisTicks
             .scale(tick_scale)
             .tickValues( tick_scale.ticks(numTicks).slice(1,-1))
@@ -537,7 +545,6 @@ nv.models.discreteBarPlusLineChartPan = function() {
         ;
 
       //------------------------------------------------------------
-
 
       //============================================================
       // Panning feature in the chart (without Zoom)
@@ -898,6 +905,12 @@ nv.models.discreteBarPlusLineChartPan = function() {
   chart.displayXImageLabel = function(_) {
     if (!arguments.length) return displayXImageLabel;
     displayXImageLabel = _;
+    return chart;
+  };
+
+  chart.barWidthThreshold = function(_) {
+    if (!arguments.length) return barWidthThreshold;
+    barWidthThreshold = _;
     return chart;
   };
 
