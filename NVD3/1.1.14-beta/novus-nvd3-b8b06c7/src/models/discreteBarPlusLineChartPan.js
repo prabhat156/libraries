@@ -439,14 +439,14 @@ nv.models.discreteBarPlusLineChartPan = function() {
                 .attr('transform', function(d,i,j) { return 'translate(0,' + (j % 2 == 0 ? '5' : '17') + ')' })
           }
 
-          //GOLD//// Try to rotate the axis labels
-          //GOLD//if(rotateLabels){
-          //GOLD//    xTicks
-          //GOLD//          .selectAll('text')
-          //GOLD//          .attr('transform', 'rotate(' + rotateLabels +')')
-          //GOLD//          .style('text-anchor', rotateLabels > 0 ? 'start' : 'end')
-          //GOLD//          ;
-          //GOLD//}
+          // Try to rotate the axis labels
+          if(rotateLabels){
+              xTicks
+                    .selectAll('text')
+                    .attr('transform', 'rotate(' + rotateLabels +')')
+                    .style('text-anchor', rotateLabels > 0 ? 'start' : 'end')
+                    ;
+          }
 
           // PK:  Display the ticks seperately
           var numTicks = dataBars[0].values.length;
