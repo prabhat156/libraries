@@ -4,27 +4,26 @@ nv.models.pie = function() {
   // Public Variables with Default Settings
   //------------------------------------------------------------
 
-  var margin = {top: 0, right: 0, bottom: 0, left: 0}
-    , width = 500
-    , height = 500
-    , getX = function(d) { return d.x }
-    , getY = function(d) { return d.y }
-    , getDescription = function(d) { return d.description }
-    , id = Math.floor(Math.random() * 10000) //Create semi-unique ID in case user doesn't select one
-    , color = nv.utils.defaultColor()
-    , valueFormat = d3.format(',.2f')
-    , showLabels = true
-    , pieLabelsOutside = true
-    , donutLabelsOutside = false
-    , labelType = "key"
-    , labelThreshold = .02 //if slice percentage is under this, don't show label
-    , donut = false
-    , labelSunbeamLayout = false
-    , startAngle = false
-    , endAngle = false
-    , donutRatio = 0.5
-    , dispatch = d3.dispatch('chartClick', 'elementClick', 'elementDblClick', 'elementMouseover', 'elementMouseout')
-    ;
+  var margin = {top: 0, right: 0, bottom: 0, left: 0},
+    width = 500,
+    height = 500,
+    getX = function(d) { return d.x; },
+    getY = function(d) { return d.y; },
+    getDescription = function(d) { return d.description; },
+    id = Math.floor(Math.random() * 10000), //Create semi-unique ID in case user doesn't select one
+    color = nv.utils.defaultColor(),
+    valueFormat = d3.format(',.2f'),
+    showLabels = true,
+    pieLabelsOutside = true,
+    donutLabelsOutside = false,
+    labelType = "key",
+    labelThreshold = 0.02, //if slice percentage is under this, don't show label
+    donut = false,
+    labelSunbeamLayout = false,
+    startAngle = false,
+    endAngle = false,
+    donutRatio = 0.5,
+    dispatch = d3.dispatch('chartClick', 'elementClick', 'elementDblClick', 'elementMouseover', 'elementMouseout');
 
   //============================================================
 
@@ -55,12 +54,19 @@ nv.models.pie = function() {
 
       // PK : Modification to the placement of the pie
       if(showLabels){
-          g.select('.nv-pie').attr('transform', 'translate(' + radius + ',' + radius + ')');
-          g.select('.nv-pieLabels').attr('transform', 'translate(' + radius + ',' + radius + ')');
+          //GOLD//g.select('.nv-pie').attr('transform', 'translate(' + radius + ',' + radius + ')');
+          //GOLD//g.select('.nv-pieLabels').attr('transform', 'translate(' + radius + ',' + radius + ')');
+          // TODO : This would shift the pie to the centre of the area
+          g.select('.nv-pie').attr('transform', 'translate(' + (availableWidth/2) + ',' + radius + ')');
+          g.select('.nv-pieLabels').attr('transform', 'translate(' + (availableWidth/2) + ',' + radius + ')');
       } else {
           arcRadius = radius;
-          g.select('.nv-pie').attr('transform', 'translate(' + arcRadius + ',' + arcRadius + ')');
-          g.select('.nv-pieLabels').attr('transform', 'translate(' + arcRadius + ',' + arcRadius + ')');
+          console.log('YYYY: ' + arcRadius);
+          //GOLd//g.select('.nv-pie').attr('transform', 'translate(' + (arcRadius) + ',' + arcRadius + ')');
+          //GOLd//g.select('.nv-pieLabels').attr('transform', 'translate(' + arcRadius + ',' + arcRadius + ')');
+          // TODO : This would shift the pie to the centre of the area
+          g.select('.nv-pie').attr('transform', 'translate(' + (availableWidth/2) + ',' + arcRadius + ')');
+          g.select('.nv-pieLabels').attr('transform', 'translate(' + (availableWidth/2) + ',' + arcRadius + ')');
       }
 
       //------------------------------------------------------------
@@ -80,14 +86,14 @@ nv.models.pie = function() {
       var arc = d3.svg.arc()
                   .outerRadius(arcRadius);
 
-      if (startAngle) arc.startAngle(startAngle)
+      if (startAngle) arc.startAngle(startAngle);
       if (endAngle) arc.endAngle(endAngle);
       if (donut) arc.innerRadius(radius * donutRatio);
 
       // Setup the Pie chart and choose the data element
       var pie = d3.layout.pie()
           .sort(null)
-          .value(function(d) { return d.disabled ? 0 : getY(d) });
+          .value(function(d) { return d.disabled ? 0 : getY(d); });
 
       var slices = wrap.select('.nv-pie').selectAll('.nv-slice')
           .data(pie);
@@ -184,7 +190,7 @@ nv.models.pie = function() {
                        } else {
                          d.outerRadius = radius + 10; // Set Outer Coordinate
                          d.innerRadius = radius + 15; // Set Inner Coordinate
-                         return 'translate(' + labelsArc.centroid(d) + ')'
+                         return 'translate(' + labelsArc.centroid(d) + ')';
                        }
                   });
 
@@ -196,7 +202,7 @@ nv.models.pie = function() {
 
                 group.append('text')
                     .style('text-anchor', labelSunbeamLayout ? ((d.startAngle + d.endAngle) / 2 < Math.PI ? 'start' : 'end') : 'middle') //center the text on it's origin or begin/end if orthogonal aligned
-                    .style('fill', '#000')
+                    .style('fill', '#000');
 
             });
 
@@ -234,7 +240,7 @@ nv.models.pie = function() {
                         center[1] -= avgHeight;
                       }
                       labelLocationHash[createHashKey(center)] = true;
-                      return 'translate(' + center + ')'
+                      return 'translate(' + center + ')';
                     }
                 });
           pieLabels.select(".nv-label text")

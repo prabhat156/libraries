@@ -8,7 +8,7 @@ nv.models.vxPieChart = function() {
       legend = nv.models.vxLegend()
     ;
 
-  var margin = {top: 60, right: 20, bottom: 20, left: 20},
+  var margin = {top: 20, right: 10, bottom: 10, left: 10},
       width = null,
       height = null,
       showLegend = true,
@@ -16,7 +16,7 @@ nv.models.vxPieChart = function() {
       tooltips = true,
       tooltip = function(key, y, e, graph) {
         return '<h3>' + key + '</h3>' +
-               '<p>' +  y + '</p>'
+               '<p>' +  y + '</p>';
       },
       state = {},
       defaultState = null,
@@ -26,8 +26,13 @@ nv.models.vxPieChart = function() {
       chartTitleStyle = "text-anchor:middle;font-size:16pt; fill:#3c4f54; font-weight:normal; font-family:Helvetica"
     ;
 
-  legend
-      .orientation('right');
+  //legend
+  //    //.orientation('right')
+  //    //.orientation('top')
+  //    //.orientation('bottom')
+  //    //.defaultStyle(5)
+  //    //.legendPosY(430)
+  //    ;
 
   //============================================================
 
@@ -37,7 +42,7 @@ nv.models.vxPieChart = function() {
   //------------------------------------------------------------
 
   var showTooltip = function(e, offsetElement) {
-    var tooltipLabel = pie.description()(e.point) || pie.x()(e.point)
+    var tooltipLabel = pie.description()(e.point) || pie.x()(e.point);
     var left = e.pos[0] + ( (offsetElement && offsetElement.offsetLeft) || 0 ),
         top = e.pos[1] + ( (offsetElement && offsetElement.offsetTop) || 0),
         y = pie.valueFormat()(pie.y()(e.point)),
@@ -54,16 +59,14 @@ nv.models.vxPieChart = function() {
       var container = d3.select(this),
           that = this;
 
-      var availableWidth = (width || parseInt(container.style('width')) || 960)
-                             - margin.left - margin.right,
-          availableHeight = (height || parseInt(container.style('height')) || 400)
-                             - margin.top - margin.bottom;
+      var availableWidth = (width || parseInt(container.style('width'), 10) || 960) - margin.left - margin.right,
+          availableHeight = (height || parseInt(container.style('height'), 10) || 400) - margin.top - margin.bottom;
 
       chart.update = function() { container.transition().call(chart); };
       chart.container = this;
 
       //set state.disabled
-      state.disabled = data.map(function(d) { return !!d.disabled });
+      state.disabled = data.map(function(d) { return !!d.disabled; });
 
       if (!defaultState) {
         var key;
@@ -90,7 +93,7 @@ nv.models.vxPieChart = function() {
         noDataText
           .attr('x', margin.left + availableWidth / 2)
           .attr('y', margin.top + availableHeight / 2)
-          .text(function(d) { return d });
+          .text(function(d) { return d; });
 
         return chart;
       } else {
@@ -107,11 +110,11 @@ nv.models.vxPieChart = function() {
           .enter()
           .append('text')
           .attr('class', 'nvd3 nv-charttitle')
-          .attr('x', availableWidth/2)
+          .attr('x', (availableWidth/2+margin.left))
           .attr('y', 30)
           .attr("text-anchor", "middle")
           //.attr("style", chartTitleStyle)
-          .text(function(d){return d});
+          .text(function(d){return d; });
       //===================================================================
 
 
@@ -134,16 +137,31 @@ nv.models.vxPieChart = function() {
       if (showLegend) {
         legend
           .width( availableWidth )
-          .height( availableHeight/2 )
+          //GOLD//.height( availableHeight/2 )
+          .height( availableHeight )
           .key(pie.x());
 
         wrap.select('.nv-legendWrap')
             .datum(data)
             .call(legend);
 
-        // Update the availableWidth based on the width of the legend
-        if(margin.left != legend.width()){
-            availableWidth = availableWidth - legend.width();
+        //GOLD//// Update the availableWidth based on the width of the legend
+        //GOLD//if(margin.left != legend.width()){
+        //GOLD//    availableWidth = availableWidth - legend.width();
+        //GOLD//}
+
+        if(legend.orientation() === 'top'){
+            if(margin.top != legend.height()){
+                availableHeight = availableHeight - legend.height();
+            }
+        } else if (legend.orientation() === 'bottom'){
+            if(margin.bottom != legend.height()){
+                availableHeight = availableHeight - legend.height();
+            }
+        } else if (legend.orientation === 'right'){
+            if(margin.right != legend.width()){
+                availableWidth = availableWidth - legend.width();
+            }
         }
 
         //COMMENTING-THIS//if ( margin.top != legend.height()) {
@@ -244,6 +262,7 @@ nv.models.vxPieChart = function() {
   chart.pie = pie;
 
   d3.rebind(chart, pie, 'valueFormat', 'values', 'x', 'y', 'description', 'id', 'showLabels', 'donutLabelsOutside', 'pieLabelsOutside', 'labelType', 'donut', 'donutRatio', 'labelThreshold', 'legendTextStyle');
+  d3.rebind(chart, legend, 'orientation', 'defaultStyle', 'legendPosY');
   chart.options = nv.utils.optionsFunc.bind(chart);
   
   chart.margin = function(_) {

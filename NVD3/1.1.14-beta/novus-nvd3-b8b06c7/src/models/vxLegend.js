@@ -7,7 +7,7 @@ nv.models.vxLegend = function() {
   var margin = {top: 5, right: 0, bottom: 5, left: 0},
       width = 400,
       height = 20,
-      getKey = function(d) { return d.key },
+      getKey = function(d) { return d.key; },
       color = nv.utils.defaultColor(),
       align = true,
       orientation = 'top',
@@ -16,11 +16,28 @@ nv.models.vxLegend = function() {
       radioButtonMode = false,   //If true, clicking legend items will cause it to behave like a radio button. (only one can be selected at a time),
       dispatch = d3.dispatch('legendClick', 'legendDblclick', 'legendMouseover', 'legendMouseout', 'stateChange'),
       defaultStyle = 1,
-      getLegendStyle = function(d){ return d.legendStyle || defaultStyle}
+      getLegendStyle = function(d){ return d.legendStyle || defaultStyle; },
+      legendPosY = null
     ;
 
   //============================================================
 
+  var vSeparation = 20, maxLength=20;
+  // Word-wrap function
+  function wordwrap(text, max){
+      var regex = new RegExp(".{0,"+max+"}(?:\\s|$)","g");
+      var lines = [];
+
+      var line;
+      //GOLD//while((line = regex.exec(text))!=""){
+      //GOLD//    lines.push(line);
+      //GOLD//}
+      while((line = regex.exec(text))){
+          if(line[0].length === 0) break;
+          lines.push(line);
+      }
+      return lines;
+  }
 
   function chart(selection) {
     selection.each(function(data) {
@@ -41,7 +58,7 @@ nv.models.vxLegend = function() {
       //------------------------------------------------------------
 
       var series = g.selectAll('.nv-series')
-          .data(function(d) { return d });
+          .data(function(d) { return d; });
       var seriesEnter = series.enter().append('g').attr('class', function(d,i){ return 'nv-series nv-legendStyle-'+getLegendStyle(d);})
           .on('mouseover', function(d,i) {
             dispatch.legendMouseover(d,i);  //TODO: Make consistent with other event objects
@@ -55,19 +72,19 @@ nv.models.vxLegend = function() {
                if (radioButtonMode) {
                    //Radio button mode: set every series to disabled,
                    //  and enable the clicked series.
-                   data.forEach(function(series) { series.disabled = true});
+                   data.forEach(function(series) { series.disabled = true; });
                    d.disabled = false;
                }
                else {
                    d.disabled = !d.disabled;
-                   if (data.every(function(series) { return series.disabled})) {
+                   if (data.every(function(series) { return series.disabled; })) {
                        //the default behavior of NVD3 legends is, if every single series
                        // is disabled, turn all series' back on.
-                       data.forEach(function(series) { series.disabled = false});
+                       data.forEach(function(series) { series.disabled = false; });
                    }
                }
                dispatch.stateChange({
-                  disabled: data.map(function(d) { return !!d.disabled })
+                  disabled: data.map(function(d) { return !!d.disabled; })
                });
             }
           })
@@ -81,7 +98,7 @@ nv.models.vxLegend = function() {
                 });
                 d.disabled = false; 
                 dispatch.stateChange({
-                    disabled: data.map(function(d) { return !!d.disabled })
+                    disabled: data.map(function(d) { return !!d.disabled; })
                 });
             }
           });
@@ -160,29 +177,88 @@ nv.models.vxLegend = function() {
           .attr('dx', '38')
           ;
 
+      // Legend Style 5
+      seriesEnter.filter('.nv-legendStyle-5')
+          .append('rect')
+          .attr('width', 20)
+          .attr('height', 12)
+          .attr('x', 0)
+          .attr('y', -6)
+          .attr('rx', 1)
+          .attr('ry', 1)
+          .style('stroke-width', 2)
+          .attr('class','nv-legend-symbol')
+          ;
+      seriesEnter.filter('.nv-legendStyle-5')
+          .append('text')
+          .attr('text-anchor', 'middle')
+          .attr('class','nv-legend-text')
+          //GOLD//.attr('dy', '.32em')
+          //GOLD//.attr('dx', '30')
+          //.attr('dy', '25')
+          //.attr('dx', '30')
+          //.attr('x', 10)
+          .attr('y', 4)
+          ;
 
-      series.classed('disabled', function(d) { return d.disabled });
+      series.classed('disabled', function(d) { return d.disabled; });
       series.exit().remove();
       series.select('circle')
-          .style('fill', function(d,i) { return d.color || color(d,i)})
-          .style('stroke', function(d,i) { return d.color || color(d, i) });
+          .style('fill', function(d,i) { return d.color || color(d,i); })
+          .style('stroke', function(d,i) { return d.color || color(d, i); });
       series.select('line')
-          .style('fill', function(d,i) { return d.color || color(d,i)})
-          .style('stroke', function(d,i) { return d.color || color(d, i) });
+          .style('fill', function(d,i) { return d.color || color(d,i); })
+          .style('stroke', function(d,i) { return d.color || color(d, i); });
       series.select('rect')
-          .style('fill', function(d,i) { return d.color || color(d,i)})
-          .style('stroke', function(d,i) { return d.color || color(d, i) });
+          .style('fill', function(d,i) { return d.color || color(d,i); })
+          .style('stroke', function(d,i) { return d.color || color(d, i); });
       series.select('path')
-          .style('fill', function(d,i) { return d.color || color(d,i)})
-          .style('stroke', function(d,i) { return d.color || color(d, i) });
-      series.select('text').text(getKey);
+          .style('fill', function(d,i) { return d.color || color(d,i); })
+          .style('stroke', function(d,i) { return d.color || color(d, i); });
+      //GOLD//series.select('text').text(getKey);
 
+      // TODO : Currently this is just a hack
+      if (orientation === 'bottom'){
+          series.select('text').each(function(d){
+              //var lines = wordwrap('this is a test in the rain and its going to snow later', maxLength);
+              var lines = wordwrap(getKey(d), maxLength);
+              d3.select(this).selectAll('tspan').data(lines)
+                .enter()
+                .append('tspan')
+                .attr('x', 10)
+                .attr('dy', vSeparation)
+                .text(function(d){ return d; });
+
+          });
+      } else {
+          series.select('text').text(getKey);
+      }
+      
       //TODO: implement fixed-width and max-width options (max-width is especially useful with the align option)
 
       // NEW ALIGNING CODE, TODO: clean up
+      var seriesWidths = [];
+      var seriesHeights = [];
+      var seriesPerRow = 0;
+      var legendWidth = 0;
+      var columnWidths = [];
+      var rowHeights = [];
+      var rowOffsets = [];
+      var seriesPerColumn = 0;
+      var legendHeight = 0;
+      var columnHeights = [];
+      var columnOffsets = [];
+      var xPositions = [];
+      var yPositions = [];
+      var k, i;
+      var curX, curY;
+      var cwr = function(prev, cur, index, array){
+          return prev + cur;
+      };
+
+
       if (align && (orientation === 'top')) {
 
-        var seriesWidths = [];
         series.each(function(d,i) {
               var legendText = d3.select(this).select('text');
               var nodeTextLength;
@@ -214,10 +290,6 @@ nv.models.vxLegend = function() {
               seriesWidths.push(nodeTextLength + padding); // padding is based on the style of the legend
             });
 
-        var seriesPerRow = 0;
-        var legendWidth = 0;
-        var columnWidths = [];
-
         while ( legendWidth < availableWidth && seriesPerRow < seriesWidths.length) {
           columnWidths[seriesPerRow] = seriesWidths[seriesPerRow];
           legendWidth += seriesWidths[seriesPerRow++];
@@ -228,18 +300,15 @@ nv.models.vxLegend = function() {
           columnWidths = [];
           seriesPerRow--;
 
-          for (var k = 0; k < seriesWidths.length; k++) {
+          for (k = 0; k < seriesWidths.length; k++) {
             if (seriesWidths[k] > (columnWidths[k % seriesPerRow] || 0) )
               columnWidths[k % seriesPerRow] = seriesWidths[k];
           }
 
-          legendWidth = columnWidths.reduce(function(prev, cur, index, array) {
-                          return prev + cur;
-                        });
+          legendWidth = columnWidths.reduce(cwr);
         }
 
-        var xPositions = [];
-        for (var i = 0, curX = 0; i < seriesPerRow; i++) {
+        for (i = 0, curX = 0; i < seriesPerRow; i++) {
             xPositions[i] = curX;
             curX += columnWidths[i];
         }
@@ -259,10 +328,112 @@ nv.models.vxLegend = function() {
 
         height = margin.top + margin.bottom + (Math.ceil(seriesWidths.length / seriesPerRow) * 20);
 
+      } else if (align && (orientation === 'bottom')) {
+
+          // BOTTOM ORIENTATION //
+        series.each(function(d,i) {
+              var legendText = d3.select(this).select('text');
+              var nodeTextLength;
+              var nodeTextHeight;
+              try {
+                //GOLD//nodeTextLength = legendText.node().getComputedTextLength();
+                nodeTextLength = legendText.node().getBBox().width;
+                nodeTextHeight = legendText.node().getBBox().height;
+              }
+              catch(e) {
+                nodeTextLength = nv.utils.calcApproxTextWidth(legendText);
+                // TODO : Change this default
+                nodeTextHeight = 10;
+              }
+           
+              var padding;
+              switch(getLegendStyle(d)){
+                  case 1:
+                      padding = 40;
+                      break;
+                  case 2:
+                      padding = 35;
+                      break;
+                  case 3:
+                      padding = 35;
+                      break;
+                  case 4:
+                      padding = 48;
+                      break;
+                  default:
+                      padding = 35;
+                      break;
+              }
+              //GOLD//seriesWidths.push(nodeTextLength + padding); // padding is based on the style of the legend
+              // TODO : Not using the horizontal padding for the text
+              seriesWidths.push(nodeTextLength); // padding is based on the style of the legend
+              seriesHeights.push(nodeTextHeight); // TODO There is no padding in height
+            });
+
+        while ( legendWidth < availableWidth && seriesPerRow < seriesWidths.length) {
+          columnWidths[seriesPerRow] = seriesWidths[seriesPerRow];
+          legendWidth += seriesWidths[seriesPerRow++];
+        }
+        if (seriesPerRow === 0) seriesPerRow = 1; //minimum of one series per row
+
+        while ( legendWidth > availableWidth && seriesPerRow > 1 ) {
+          columnWidths = [];
+          seriesPerRow--;
+
+          for (k = 0; k < seriesWidths.length; k++) {
+            if (seriesWidths[k] > (columnWidths[k % seriesPerRow] || 0) )
+              columnWidths[k % seriesPerRow] = seriesWidths[k];
+          }
+
+          legendWidth = columnWidths.reduce(cwr);
+        }
+
+        // Compute each row max height/offset
+        for(i=0; i<(seriesHeights.length/seriesPerRow); i++){
+            rowHeights[i] = 0;
+        }
+        for(i=0; i<seriesHeights.length; i++){
+            if (rowHeights[i/seriesPerRow] < seriesHeights[i]){
+                rowHeights[i/seriesPerRow] = seriesHeights[i];
+            }
+
+        }
+        // Compute the row offsets
+        rowOffsets[0] = 0;
+        for(i=1; i<(seriesHeights.length/seriesPerRow); i++){
+            //rowOffsets[i] = rowHeights[i-1] + rowOffsets[i-1] + 12 + 4 + 14;
+            rowOffsets[i] = rowHeights[i-1] + rowOffsets[i-1] + 12 + 18;
+        }
+        // DONE
+
+        var temp = (availableWidth-margin.left-margin.right)/seriesPerRow;
+        for (i = 0; i < seriesPerRow; i++) {
+            // TODO : This is restrictive to Style= 5, i.e., a rectangle as '10' is '20/2'
+            xPositions[i] = i*temp + temp/2 - 10;
+        }
+
+        series
+            .attr('transform', function(d, i) {
+              return 'translate(' + xPositions[i % seriesPerRow] + ',' + (rowOffsets[parseInt(i/seriesPerRow, 10)]) + ')';
+            });
+
+        //position legend as far right as possible within the total width
+        if (rightAlign) {
+            // height of the legend will be rowOffsets[rowOffsets.length-1] + 30. '30' is the extra which is added as padding to every height
+            var y_pos = legendPosY || height - margin.bottom - rowOffsets[rowOffsets.length-1] + 30; 
+            g.attr('transform', 'translate(' + (margin.left) + ',' + y_pos + ')');
+        }
+        else {
+           g.attr('transform', 'translate(0' + ',' + margin.top + ')');
+        }
+
+        //height = margin.top + margin.bottom + (Math.ceil(seriesWidths.length / seriesPerRow) * 20) + 40;
+        //GOLD//height = margin.top + margin.bottom + (rowOffsets[rowOffsets.length-1]-30);
+        height = legendPosY ? (height-legendPosY) : margin.top + margin.bottom + (rowOffsets[rowOffsets.length-1]-30);
+
       } else if (align && (orientation === 'right')) {
 
         // THIS IS A TEST CODE TO VERTICALLY ALIGN ALONG THE RIGHT SIDE
-        var seriesWidths = [];
         series.each(function(d,i) {
               var legendText = d3.select(this).select('text');
               var nodeTextLength;
@@ -294,13 +465,6 @@ nv.models.vxLegend = function() {
               seriesWidths.push(nodeTextLength + padding); // padding is based on the style of the legend
             });
 
-        var seriesPerColumn = 0;
-        var legendHeight = 0;
-        var legendWidth = 0;
-        var rowHeights = [];
-        var columnHeights = [];
-        var columnOffsets = [];
-
         // PK: Initialize with each series in its own row!!!
         while ( legendHeight < availableHeight && seriesPerColumn < seriesWidths.length) {
           columnHeights[seriesPerColumn] = 30;
@@ -319,16 +483,15 @@ nv.models.vxLegend = function() {
             
             columnOffsets[0] = 0;
             var loop_count = seriesWidths.length/seriesPerColumn;
-            if(seriesWidths.length%seriesPerColumn == 0) loop_count++;
-            for(var k=0; k<loop_count; k++){
+            if(seriesWidths.length%seriesPerColumn === 0) loop_count++;
+            for(k=0; k<loop_count; k++){
                 var curColumnWidth = d3.max(seriesWidths.slice(k*seriesPerColumn, (k+1)*seriesPerColumn-1));
                 columnOffsets[k+1] = columnOffsets[k]+curColumnWidth;
                 legendWidth += curColumnWidth;
             }
         }
 
-        var yPositions = [];
-        for (var i = 0, curY = 0; i < seriesPerColumn; i++) {
+        for (i = 0, curY = 0; i < seriesPerColumn; i++) {
             yPositions[i] = curY;
             curY += 30;
         }
@@ -478,6 +641,12 @@ nv.models.vxLegend = function() {
   chart.defaultStyle = function(_) {
     if (!arguments.length) return defaultStyle;
     defaultStyle = _;
+    return chart;
+  };
+
+  chart.legendPosY = function(_) {
+    if (!arguments.length) return legendPosY;
+    legendPosY = _;
     return chart;
   };
 
