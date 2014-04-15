@@ -61,7 +61,6 @@ nv.models.pie = function() {
           g.select('.nv-pieLabels').attr('transform', 'translate(' + (availableWidth/2) + ',' + radius + ')');
       } else {
           arcRadius = radius;
-          console.log('YYYY: ' + arcRadius);
           //GOLd//g.select('.nv-pie').attr('transform', 'translate(' + (arcRadius) + ',' + arcRadius + ')');
           //GOLd//g.select('.nv-pieLabels').attr('transform', 'translate(' + arcRadius + ',' + arcRadius + ')');
           // TODO : This would shift the pie to the centre of the area
