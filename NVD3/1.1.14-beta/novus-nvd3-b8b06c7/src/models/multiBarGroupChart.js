@@ -1,50 +1,48 @@
-
 nv.models.multiBarGroupChart = function() {
   "use strict";
   //============================================================
   // Public Variables with Default Settings
   //------------------------------------------------------------
 
-  var multibar = nv.models.multiBarGroup()
-    , xAxis = nv.models.axis()
-    , xAxisTicks = nv.models.axis()
-    , yAxis = nv.models.axis()
-    , legend = nv.models.vxLegend()
-    , controls = nv.models.legend()
-    ;
+  var multibar = nv.models.multiBarGroup(),
+      xAxis = nv.models.axis(),
+      xAxisTicks = nv.models.axis(),
+      yAxis = nv.models.axis(),
+      legend = nv.models.vxLegend(),
+      controls = nv.models.legend();
 
-  var margin = {top: 60, right: 20, bottom: 50, left: 70}
-    , width = null
-    , height = null
-    , color = nv.utils.defaultColor()
-    , showControls = true
-    , showLegend = true
-    , showXAxis = true
-    , showYAxis = true
-    , rightAlignYAxis = false
-    , reduceXTicks = true // if false a tick will show for every data point
-    , staggerLabels = false
-    , rotateLabels = 0
-    , tooltips = true
-    , tooltip = function(key, x, y, e, graph) {
+  var margin = {top: 60, right: 20, bottom: 50, left: 70},
+      width = null,
+      height = null,
+      color = nv.utils.defaultColor(),
+      showControls = true,
+      showLegend = true,
+      showXAxis = true,
+      showYAxis = true,
+      rightAlignYAxis = false,
+      reduceXTicks = true, // if false a tick will show for every data point
+      staggerLabels = false,
+      rotateLabels = 0,
+      tooltips = true,
+      tooltip = function(key, x, y, e, graph) {
         return '<h3>' + key + '</h3>' +
-               '<p>' +  y + ' on ' + x + '</p>'
-      }
-    , x //can be accessed via chart.xScale()
-    , y //can be accessed via chart.yScale()
-    , tick_scale = d3.scale.linear()
-    , state = { stacked: false }
-    , defaultState = null
-    , noData = "No Data Available."
-    , dispatch = d3.dispatch('tooltipShow', 'tooltipHide', 'stateChange', 'changeState')
-    , controlWidth = function() { return showControls ? 180 : 0 }
-    , transitionDuration = 250
-    , chartTitle = "Chart"
-    , chartTitleStyle = "font-size:24px"
-    , xAxisLabel = "x-Axis Label"
-    , yAxisLabel = "y-Axis Label"
-    , yAxisLabelStyle = "text-anchor:middle;font-size:18px"
-    ;
+               '<p>' +  y + ' on ' + x + '</p>';
+      },
+      x, //can be accessed via chart.xScale()
+      y, //can be accessed via chart.yScale()
+      tick_scale = d3.scale.linear(),
+      state = { stacked: false },
+      defaultState = null,
+      noData = "No Data Available.",
+      dispatch = d3.dispatch('tooltipShow', 'tooltipHide', 'stateChange', 'changeState'),
+      controlWidth = function() { return showControls ? 180 : 0; },
+      transitionDuration = 250,
+      chartTitle = "Chart",
+      chartTitleStyle = "font-size:24px",
+      xAxisLabel = "x-Axis Label",
+      yAxisLabel = "y-Axis Label",
+      yAxisLabelStyle = "text-anchor:middle;font-size:18px",
+      tooltipValueFormat = d3.format(',.2f');
 
   multibar
     .stacked(true)
@@ -53,13 +51,13 @@ nv.models.multiBarGroupChart = function() {
     .orient('bottom')
     .tickPadding(10)
     .showMaxMin(false)
-    .tickFormat(function(d) { return d })
+    .tickFormat(function(d) { return d; })
     ;
   xAxisTicks
     .orient('bottom')
     .tickPadding(7)
     .showMaxMin(false)
-    .tickFormat(function(d) { return '' })
+    .tickFormat(function(d) { return ''; })
     ;
   yAxis
     .tickPadding(5)
@@ -75,12 +73,68 @@ nv.models.multiBarGroupChart = function() {
   // Private Variables
   //------------------------------------------------------------
 
+  var newTooltipContent = function(columns, data){
+      var tableContainer = d3.select(document.createElement("div"));
+
+      var table = tableContainer.append("table"),
+          thead = table.append("thead"),
+          tbody = table.append("tbody");
+
+      // Append the header row
+      thead.append("tr")
+          .selectAll("th")
+          .data(columns)
+          .enter()
+          .append("th")
+          .style('color', function(column, i){ return column.color || color(column, i);})
+          .text(function(column){ return column; });
+
+      // Create a for for each object in the data
+      var rows = tbody.selectAll("tr")
+          .data(data)
+          .enter()
+          .append("tr");
+
+      // Create a cell for each row in each column
+      var cells = rows.selectAll("td")
+          .data(function(row){
+              return columns.map(function(column, i){
+                  return {
+                      column: column,
+                      //value: d3.format(',.2f')(row[i])
+                      value: tooltipValueFormat(row[i])
+                  };
+              });
+          })
+          .enter()
+          .append("td")
+          .style('color', function(d,i){ return d.color || color(d,i); })
+          .text(function(d){ return d.value; });
+
+      var tableContent = tableContainer.html();
+
+      return tableContent;
+  };
+
   var showTooltip = function(e, offsetElement) {
     var left = e.pos[0] + ( offsetElement.offsetLeft || 0 ),
         top = e.pos[1] + ( offsetElement.offsetTop || 0),
         x = xAxis.tickFormat()(multibar.x()(e.point, e.pointIndex)),
         y = yAxis.tickFormat()(multibar.y()(e.point, e.pointIndex)),
+        content = null;
+
+    // Tooltip content style will depend on  whether the chart is grouped or stacked
+    if(multibar.stacked()){
+        content = newTooltipContent(e.values.map(function(d){ return d.key; }),
+                d3.range(1).map(function(d){
+                    return e.values.map(function(dd){
+                        return dd.value;
+                    });
+                })
+                );
+    } else {
         content = tooltip(e.series.key, x, y, e, chart);
+    }
 
     nv.tooltip.show([left, top], content, e.value < 0 ? 'n' : 's', null, offsetElement);
   };
@@ -93,16 +147,14 @@ nv.models.multiBarGroupChart = function() {
       var container = d3.select(this),
           that = this;
 
-      var availableWidth = (width  || parseInt(container.style('width')) || 960)
-                             - margin.left - margin.right,
-          availableHeight = (height || parseInt(container.style('height')) || 400)
-                             - margin.top - margin.bottom;
+      var availableWidth = (width  || parseInt(container.style('width'), 10) || 960) - margin.left - margin.right,
+          availableHeight = (height || parseInt(container.style('height'), 10) || 400) - margin.top - margin.bottom;
 
-      chart.update = function() { container.transition().duration(transitionDuration).call(chart) };
+      chart.update = function() { container.transition().duration(transitionDuration).call(chart); };
       chart.container = this;
 
       //set state.disabled
-      state.disabled = data.map(function(d) { return !!d.disabled });
+      state.disabled = data.map(function(d) { return !!d.disabled; });
 
       if (!defaultState) {
         var key;
@@ -117,7 +169,7 @@ nv.models.multiBarGroupChart = function() {
       //------------------------------------------------------------
       // Display noData message if there's nothing to show.
 
-      if (!data || !data.length || !data.filter(function(d) { return d.values.length }).length) {
+      if (!data || !data.length || !data.filter(function(d) { return d.values.length; }).length) {
         var noDataText = container.selectAll('.nv-noData').data([noData]);
 
         noDataText.enter().append('text')
@@ -128,7 +180,7 @@ nv.models.multiBarGroupChart = function() {
         noDataText
           .attr('x', margin.left + availableWidth / 2)
           .attr('y', margin.top + availableHeight / 2)
-          .text(function(d) { return d });
+          .text(function(d) { return d; });
 
         return chart;
       } else {
@@ -149,7 +201,7 @@ nv.models.multiBarGroupChart = function() {
           .attr("text-anchor", "middle")
           // Handled by CSS now
           //.attr("style", chartTitleStyle)
-          .text(function(d){return d});
+          .text(function(d){return d; });
 
 
       //------------------------------------------------------------
@@ -189,7 +241,7 @@ nv.models.multiBarGroupChart = function() {
         if (multibar.barColor())
           data.forEach(function(series,i) {
             series.color = d3.rgb('#ccc').darker(i * 1.5).toString();
-          })
+          });
 
         g.select('.nv-legendWrap')
             .datum(data)
@@ -240,16 +292,16 @@ nv.models.multiBarGroupChart = function() {
       // Main Chart Component(s)
 
       multibar
-        .disabled(data.map(function(series) { return series.disabled }))
+        .disabled(data.map(function(series) { return series.disabled; }))
         .width(availableWidth)
         .height(availableHeight)
         .color(data.map(function(d,i) {
           return d.color || color(d, i);
-        }).filter(function(d,i) { return !data[i].disabled }))
+        }).filter(function(d,i) { return !data[i].disabled; }));
 
 
       var barsWrap = g.select('.nv-barsWrap')
-          .datum(data.filter(function(d) { return !d.disabled }))
+          .datum(data.filter(function(d) { return !d.disabled; }));
 
       barsWrap.transition().call(multibar.numYTicks(availableHeight/60));
 
@@ -278,7 +330,7 @@ nv.models.multiBarGroupChart = function() {
 
           xTicks
               .selectAll('line, text')
-              .style('opacity', 1)
+              .style('opacity', 1);
 
           if (staggerLabels) {
               var getTranslate = function(x,y) {
@@ -290,7 +342,7 @@ nv.models.multiBarGroupChart = function() {
               xTicks
                 .selectAll("text")
                 .attr('transform', function(d,i,j) { 
-                    return  getTranslate(0, (j % 2 == 0 ? staggerUp : staggerDown));
+                    return  getTranslate(0, (j % 2 === 0 ? staggerUp : staggerDown));
                   });
 
               var totalInBetweenTicks = d3.selectAll(".nv-x.nv-axis .nv-wrap g g text")[0].length;
@@ -319,7 +371,7 @@ nv.models.multiBarGroupChart = function() {
       }
 
       // Display the ticks
-      var maxGroupSize = d3.max(data.map(function(d){ return d.values.length}));
+      var maxGroupSize = d3.max(data.map(function(d){ return d.values.length; }));
       tick_scale.domain([0, maxGroupSize]);
       tick_scale.range([0, availableWidth]);
       xAxisTicks
@@ -397,7 +449,25 @@ nv.models.multiBarGroupChart = function() {
       });
 
       dispatch.on('tooltipShow', function(e) {
-        if (tooltips) showTooltip(e, that.parentNode)
+
+          if(multibar.stacked()){
+            // PK : modification to tooltip
+            var tooltip_series = data.filter(function(d) { return !d.disabled; });
+            var num_tooltip_series = tooltip_series.length;
+            
+            // Setting tooltip to appear at one location for a column
+            e.pos[1] = y(tooltip_series[num_tooltip_series-1].values[e.pointIndex].y + tooltip_series[num_tooltip_series-1].values[e.pointIndex].y0) + margin.top+8;
+
+            // Array of values to be displayed in tabular form
+            e.values = tooltip_series.map(function(series){
+                return {
+                    key : series.key,
+                    value : series.values[e.pointIndex].y
+                };
+            });
+          }
+
+        if (tooltips) showTooltip(e, that.parentNode);
       });
 
       // Update chart from a state object passed to event handler
@@ -421,7 +491,6 @@ nv.models.multiBarGroupChart = function() {
 
       //============================================================
 
-
     });
 
     return chart;
@@ -435,6 +504,7 @@ nv.models.multiBarGroupChart = function() {
   multibar.dispatch.on('elementMouseover.tooltip', function(e) {
     e.pos = [e.pos[0] +  margin.left, e.pos[1] + margin.top];
     dispatch.tooltipShow(e);
+
   });
 
   multibar.dispatch.on('elementMouseout.tooltip', function(e) {
@@ -562,7 +632,7 @@ nv.models.multiBarGroupChart = function() {
     if (!arguments.length) return rotateLabels;
     rotateLabels = _;
     return chart;
-  }
+  };
 
   chart.staggerLabels = function(_) {
     if (!arguments.length) return staggerLabels;
@@ -609,6 +679,12 @@ nv.models.multiBarGroupChart = function() {
   chart.transitionDuration = function(_) {
     if (!arguments.length) return transitionDuration;
     transitionDuration = _;
+    return chart;
+  };
+
+  chart.tooltipValueFormat = function(_) {
+    if (!arguments.length) return tooltipValueFormat;
+    tooltipValueFormat = _;
     return chart;
   };
 

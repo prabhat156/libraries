@@ -90,6 +90,101 @@ text {
     stroke-width: 2px;
 }
 
+/* TABLE STYLING */
+.nvtooltip table
+{
+    width:260px;
+    height:50px;
+    margin: 6px;
+    border-spacing:0;
+}
+
+.nvtooltip table td {
+    padding: 0px;
+    vertical-align: middle;
+    font-size:12pt;
+    height:20px;
+    font-family:Helvetica;
+    color:#677070;
+    text-align:center;
+}
+
+.nvtooltip table th {
+    padding: 0px;
+    vertical-align: middle;
+    font-size:10pt;
+    font-weight:bold;
+    height:20px;
+    font-family:Helvetica;
+    color:#677070;
+    text-align:center;
+}
+/* TABLE STYLING END*/
+
+.nvtooltip {
+  position: absolute;
+  background-color: rgba(255,255,255,1.0);
+  padding: 1px;
+  //border: 1px solid rgba(0,0,0,.2);
+  border: 1px solid rgba(118,160,165,0);
+  z-index: 10000;
+
+  font-family: Arial;
+  font-size: 13px;
+  text-align: left;
+  pointer-events: none;
+
+  white-space: nowrap;
+
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.arrow_box {
+    position: absolute;
+    background: #ffffff;
+    border: 1px solid #76a0a5;
+}
+.arrow_box:after, .arrow_box:before {
+    top: 100%;
+    left: 50%;
+    border: solid transparent;
+    content: " ";
+    height: 0;
+    width: 0;
+    position: absolute;
+    pointer-events: none;
+}
+.arrow_box:after {
+    border-color: rgba(255, 255, 255, 0);
+    border-top-color: #ffffff;
+    border-width: 10px;
+    margin-left: -10px;
+}
+.arrow_box:before {
+    border-color: rgba(118, 160, 165, 0);
+    border-top-color: #76a0a5;
+    border-width: 11px;
+    margin-left: -11px;
+}
+
+/********************
+  Box shadow and border radius styling
+*/
+.nvtooltip.with-3d-shadow, .with-3d-shadow .nvtooltip {
+  -moz-box-shadow: 0 2px 1px rgba(34,49,53,.3);
+  -webkit-box-shadow: 0 2px 1px rgba(34,49,53,.3);
+  box-shadow: 0 2px 1px rgba(34,49,53,.3);
+
+  -webkit-border-radius: 1px;
+  -moz-border-radius: 1px;
+  border-radius: 1px;
+}
+
 </style>
 <body>
 
@@ -197,14 +292,13 @@ nv.addGraph(function() {
     chart.color(['#47629e', '#dee5e4', '#c64659']);
     // Disable controls as it will interfere with the yDomain because if you are stakced the domain might change
     chart.showControls(false);
-
-    chart.stacked(true);
-
+    
     // Set y-domain to show 0-100% always, only for percentage values
     //chart.multibar.yDomain([0,100]);
 
     chart.valueFormat(function(d,i){ return '+ ' + d3.format('.2f')(d) + '%'});
     //chart.getY0(function(d,i){ return d.y});
+    chart.tooltipValueFormat(d3.format(',.2f'))
 
     d3.select('#chart1 svg')
         .datum(negative_test_data)
