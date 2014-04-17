@@ -1,41 +1,39 @@
-
 nv.models.multiBarGroup = function() {
   "use strict";
   //============================================================
   // Public Variables with Default Settings
   //------------------------------------------------------------
 
-  var margin = {top: 0, right: 0, bottom: 0, left: 0}
-    , width = 960
-    , height = 500
-    , x = d3.scale.ordinal()
-    , y = d3.scale.linear()
-    , id = Math.floor(Math.random() * 10000) //Create semi-unique ID in case user doesn't select one
-    , getX = function(d) { return d.x }
-    , getY = function(d) { return d.y }
-    , getLabel = function(d) { return d.label }
-    , forceY = [0] // 0 is forced by default.. this makes sense for the majority of bar graphs... user can always do chart.forceY([]) to remove
-    , clipEdge = true
-    , stacked = false
-    , stackOffset = 'zero' // options include 'silhouette', 'wiggle', 'expand', 'zero', or a custom function
-    , color = nv.utils.defaultColor()
-    , hideable = false
-    , showValues = true
-    , valueFormat = d3.format(',.2f')
-    , barColor = null // adding the ability to set the color for each rather than the whole group
-    , disabled // used in conjunction with barColor to communicate from multiBarHorizontalChart what series are disabled
-    , delay = 1200
-    , xDomain
-    , yDomain
-    , xRange
-    , yRange
-    , groupInnerPadding = 0.4
-    , groupOuterPadding = 0.2
-    // barSpacing represents the spacing between consecutive bars, and it a fraction of the width of the bars [0, 1)
-    , barSpacing = 0.1
-    , dispatch = d3.dispatch('chartClick', 'elementClick', 'elementDblClick', 'elementMouseover', 'elementMouseout')
-    , numYTicks = null
-    ;
+  var margin = {top: 0, right: 0, bottom: 0, left: 0},
+      width = 960,
+      height = 500,
+      x = d3.scale.ordinal(),
+      y = d3.scale.linear(),
+      id = Math.floor(Math.random() * 10000), //Create semi-unique ID in case user doesn't select one
+      getX = function(d) { return d.x; },
+      getY = function(d) { return d.y; },
+      getLabel = function(d) { return d.label; },
+      forceY = [0], // 0 is forced by default.. this makes sense for the majority of bar graphs... user can always do chart.forceY([]) to remove
+      clipEdge = true,
+      stacked = false,
+      stackOffset = 'zero', // options include 'silhouette', 'wiggle', 'expand', 'zero', or a custom function
+      color = nv.utils.defaultColor(),
+      hideable = false,
+      showValues = true,
+      valueFormat = d3.format(',.2f'),
+      barColor = null, // adding the ability to set the color for each rather than the whole group
+      disabled, // used in conjunction with barColor to communicate from multiBarHorizontalChart what series are disabled
+      delay = 1200,
+      xDomain,
+      yDomain,
+      xRange,
+      yRange,
+      groupInnerPadding = 0.4,
+      groupOuterPadding = 0.2,
+      // barSpacing represents the spacing between consecutive bars, and it a fraction of the width of the bars [0, 1)
+      barSpacing = 0.1,
+      dispatch = d3.dispatch('chartClick', 'elementClick', 'elementDblClick', 'elementMouseover', 'elementMouseout'),
+      numYTicks = null;
 
   //============================================================
 
@@ -71,7 +69,7 @@ nv.models.multiBarGroup = function() {
       if (stacked)
         data = d3.layout.stack()
                  .offset(stackOffset)
-                 .values(function(d){ return d.values })
+                 .values(function(d){ return d.values; })
                  .y(getY)
                  (!data.length && hideable ? hideable : data);
 
@@ -90,7 +88,7 @@ nv.models.multiBarGroup = function() {
         data[0].values.map(function(d,i) {
           var posBase = 0, negBase = 0;
           data.map(function(d) {
-            var f = d.values[i]
+            var f = d.values[i];
             f.size = Math.abs(f.y);
             if (f.y<0)  {
               f.y1 = negBase;
@@ -110,16 +108,16 @@ nv.models.multiBarGroup = function() {
       var seriesData = (xDomain && yDomain) ? [] : // if we know xDomain and yDomain, no need to calculate
             data.map(function(d) {
               return d.values.map(function(d,i) {
-                return { x: getX(d,i), y: getY(d,i), y0: d.y0, y1: d.y1, label: d.label}
-              })
+                return { x: getX(d,i), y: getY(d,i), y0: d.y0, y1: d.y1, label: d.label};
+              });
             });
 
-      x   .domain(xDomain || d3.merge(seriesData).map(function(d) { return d.x }))
+      x   .domain(xDomain || d3.merge(seriesData).map(function(d) { return d.x; }))
           .rangeBands(xRange || [0, availableWidth], groupInnerPadding, groupOuterPadding);
 
       //y   .domain(yDomain || d3.extent(d3.merge(seriesData).map(function(d) { return d.y + (stacked ? d.y1 : 0) }).concat(forceY)))
       //y   .domain(yDomain || d3.extent(d3.merge(seriesData).map(function(d) { console.log(d.y1); return stacked ? (d.y > 0 ? d.y1 : d.y1 + d.y ) : d.y }).concat(forceY)))
-      y   .domain(yDomain || d3.extent(d3.merge(seriesData).map(function(d) { return stacked ? (d.y0+d.y) : d.y }).concat(forceY)))
+      y   .domain(yDomain || d3.extent(d3.merge(seriesData).map(function(d) { return stacked ? (d.y0+d.y) : d.y; }).concat(forceY)))
           .range(yRange || [availableHeight, 0]);
       y.nice();
 
@@ -127,12 +125,12 @@ nv.models.multiBarGroup = function() {
       if(numYTicks){
           var tickValues = y.ticks(numYTicks);
 
-          if(tickValues.slice(-1)[0] < d3.extent(d3.merge(seriesData).map(function(d) { return stacked ? (d.y0+d.y) : d.y }))[1]){
+          if(tickValues.slice(-1)[0] < d3.extent(d3.merge(seriesData).map(function(d) { return stacked ? (d.y0+d.y) : d.y; }))[1]){
               if(tickValues.length > 1){
                   forceY.push(tickValues.slice(-1)[0] + (tickValues[1]-tickValues[0]));
 
                   //Recompute the y-scale
-                  y   .domain(yDomain || d3.extent(d3.merge(seriesData).map(function(d) { return stacked ? (d.y0+d.y) : d.y }).concat(forceY)))
+                  y   .domain(yDomain || d3.extent(d3.merge(seriesData).map(function(d) { return stacked ? (d.y0+d.y) : d.y; }).concat(forceY)))
                       .range(yRange || [availableHeight, 0]);
                   y.nice();
 
@@ -142,12 +140,12 @@ nv.models.multiBarGroup = function() {
 
       // If scale's domain don't have a range, slightly adjust to make one... so a chart can show a single data point
       if (x.domain()[0] === x.domain()[1])
-        x.domain()[0] ?
+        var xdomain = x.domain()[0] ?
             x.domain([x.domain()[0] - x.domain()[0] * 0.01, x.domain()[1] + x.domain()[1] * 0.01])
           : x.domain([-1,1]);
 
       if (y.domain()[0] === y.domain()[1])
-        y.domain()[0] ?
+        var ydomain = y.domain()[0] ?
             y.domain([y.domain()[0] + y.domain()[0] * 0.01, y.domain()[1] - y.domain()[1] * 0.01])
           : y.domain([-1,1]);
 
@@ -165,7 +163,7 @@ nv.models.multiBarGroup = function() {
       var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-multibar');
       var defsEnter = wrapEnter.append('defs');
       var gEnter = wrapEnter.append('g');
-      var g = wrap.select('g')
+      var g = wrap.select('g');
 
       gEnter.append('g').attr('class', 'nv-groups');
 
@@ -185,7 +183,7 @@ nv.models.multiBarGroup = function() {
 
 
       var groups = wrap.select('.nv-groups').selectAll('.nv-group')
-          .data(function(d) { return d }, function(d,i) { return i });
+          .data(function(d) { return d; }, function(d,i) { return i; });
       groups.enter().append('g')
           .style('stroke-opacity', 1e-6)
           .style('fill-opacity', 1e-6);
@@ -195,11 +193,11 @@ nv.models.multiBarGroup = function() {
         .style('fill-opacity', 1e-6)
         .remove();
       groups
-          .attr('class', function(d,i) { return 'nv-group nv-series-' + i })
-          .classed('hover', function(d) { return d.hover })
-          .style('fill', function(d,i){ return color(d, i) })
+          .attr('class', function(d,i) { return 'nv-group nv-series-' + i; })
+          .classed('hover', function(d) { return d.hover; })
+          .style('fill', function(d,i){ return color(d, i); })
           //.style('stroke', function(d,i){ return color(d, i) });
-          .style('stroke', function(d,i){ return d3.rgb(color(d,i)).darker(0.22) });
+          .style('stroke', function(d,i){ return d3.rgb(color(d,i)).darker(0.22); });
       groups
           .transition()
           .style('stroke-opacity', 1)
@@ -209,12 +207,17 @@ nv.models.multiBarGroup = function() {
 
 
       var bars = groups.selectAll('g.nv-bar')
-          .data(function(d) { return (hideable && !data.length) ? hideable.values : d.values });
+          .data(function(d) { return (hideable && !data.length) ? hideable.values : d.values; });
 
       bars.exit().remove();
 
+      // PK: Bug fix : This will take care of the 'existing' (update) selection
+      bars
+          .attr('transform', function(d,i) { return 'translate(' + x0(getX(d,i)) + ',0)'; });
+
+      // This will take care of the 'enter' selection
       var barsEnter = bars.enter().append('g')
-          .attr('transform', function(d,i) { return 'translate(' + x(getX(d,i)) + ',0)'; })
+          .attr('transform', function(d,i) { return 'translate(' + x0(getX(d,i)) + ',0)'; });
 
       barsEnter.append('rect')
           .attr('height', 0)
@@ -230,7 +233,7 @@ nv.models.multiBarGroup = function() {
               value: getY(d,i),
               point: d,
               series: data[d.series],
-              pos: [x(getX(d,i)) + (x.rangeBand() * (stacked ? data.length / 2 : d.series + .5) / data.length), y(getY(d,i) + (stacked ? d.y0 : 0))],  // TODO: Figure out why the value appears to be shifted
+              pos: [x(getX(d,i)) + (x.rangeBand() * (stacked ? data.length / 2 : d.series + 0.5) / data.length), y(getY(d,i) + (stacked ? d.y0 : 0))],  // TODO: Figure out why the value appears to be shifted
               pointIndex: i,
               seriesIndex: d.series,
               e: d3.event
@@ -252,7 +255,7 @@ nv.models.multiBarGroup = function() {
               value: getY(d,i),
               point: d,
               series: data[d.series],
-              pos: [x(getX(d,i)) + (x.rangeBand() * (stacked ? data.length / 2 : d.series + .5) / data.length), y(getY(d,i) + (stacked ? d.y0 : 0))],  // TODO: Figure out why the value appears to be shifted
+              pos: [x(getX(d,i)) + (x.rangeBand() * (stacked ? data.length / 2 : d.series + 0.5) / data.length), y(getY(d,i) + (stacked ? d.y0 : 0))],  // TODO: Figure out why the value appears to be shifted
               pointIndex: i,
               seriesIndex: d.series,
               e: d3.event
@@ -264,7 +267,7 @@ nv.models.multiBarGroup = function() {
               value: getY(d,i),
               point: d,
               series: data[d.series],
-              pos: [x(getX(d,i)) + (x.rangeBand() * (stacked ? data.length / 2 : d.series + .5) / data.length), y(getY(d,i) + (stacked ? d.y0 : 0))],  // TODO: Figure out why the value appears to be shifted
+              pos: [x(getX(d,i)) + (x.rangeBand() * (stacked ? data.length / 2 : d.series + 0.5) / data.length), y(getY(d,i) + (stacked ? d.y0 : 0))],  // TODO: Figure out why the value appears to be shifted
               pointIndex: i,
               seriesIndex: d.series,
               e: d3.event
@@ -272,15 +275,15 @@ nv.models.multiBarGroup = function() {
             d3.event.stopPropagation();
           });
       bars
-          .attr('class', function(d,i) { return getY(d,i) < 0 ? 'nv-bar negative' : 'nv-bar positive'})
+          .attr('class', function(d,i) { return getY(d,i) < 0 ? 'nv-bar negative' : 'nv-bar positive'; })
           .transition()
           ;
 
       if (barColor) {
-        if (!disabled) disabled = data.map(function() { return true });
+        if (!disabled) disabled = data.map(function() { return true; });
         bars
-          .style('fill', function(d,i,j) { return d3.rgb(barColor(d,i)).darker(  disabled.map(function(d,i) { return i }).filter(function(d,i){ return !disabled[i]  })[j]   ).toString(); })
-          .style('stroke', function(d,i,j) { return d3.rgb(barColor(d,i)).darker(  disabled.map(function(d,i) { return i }).filter(function(d,i){ return !disabled[i]  })[j]   ).toString(); });
+          .style('fill', function(d,i,j) { return d3.rgb(barColor(d,i)).darker(  disabled.map(function(d,i) { return i; }).filter(function(d,i){ return !disabled[i];  })[j]   ).toString(); })
+          .style('stroke', function(d,i,j) { return d3.rgb(barColor(d,i)).darker(  disabled.map(function(d,i) { return i; }).filter(function(d,i){ return !disabled[i];  })[j]   ).toString(); });
       }
 
       if (stacked) {
@@ -360,7 +363,7 @@ nv.models.multiBarGroup = function() {
         bars
             .transition().delay(function(d,i){return 50;})
             .select('text')
-            .attr('text-anchor', function(d,i){ return 'middle'})
+            .attr('text-anchor', function(d,i){ return 'middle'; })
             //GOLD//.attr('x', function(d,i){
             //GOLD//    console.log('GGG: ' + d.series + '  ' + d.x);
             //GOLD//    return d.series*x.rangeBand()/data.length + x.rangeBand()/(2*data.length);
