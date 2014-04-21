@@ -1,4 +1,3 @@
-
 nv.models.discreteBarPlusLineChartPan = function() {
   "use strict";
   //============================================================
@@ -13,7 +12,8 @@ nv.models.discreteBarPlusLineChartPan = function() {
       //y2Axis = nv.models.axis().showMaxMin(false),
       y2Axis = nv.models.axis(),
       zoom = d3.behavior.zoom(),
-      legend = nv.models.legend(),
+      //legend = nv.models.legend(),
+      legend = nv.models.vxLegend(),
       interactiveLayer = nv.interactiveGuideline()
     ;
 
@@ -31,7 +31,7 @@ nv.models.discreteBarPlusLineChartPan = function() {
       tooltip = function(key, x, y, y2, e, graph) {
         return '<h3>' + x + '</h3>' +
                '<p>' +  y + '</p>' +
-               '<p>' +  y2 + '</p>'
+               '<p>' +  y2 + '</p>';
       },
       x,
       y,
@@ -55,7 +55,9 @@ nv.models.discreteBarPlusLineChartPan = function() {
       zoomXTranslate=0,
       barWidthThreshold = 30,
       tick_scale = d3.scale.linear(),
-      displayXImageLabel = false
+      displayXImageLabel = false,
+      multiColorBars = false,
+      plotZebraBG = false
     ;
 
   xAxis
@@ -63,13 +65,13 @@ nv.models.discreteBarPlusLineChartPan = function() {
     .orient('bottom')
     .highlightZero(false)
     .showMaxMin(false)
-    .tickFormat(function(d) { return d })
+    .tickFormat(function(d) { return d; })
     ;
   xAxisTicks
     .orient('bottom')
     .highlightZero(false)
     .showMaxMin(false)
-    .tickFormat(function(d) { return '' })
+    .tickFormat(function(d) { return ''; })
     ;
   yAxis
     .tickPadding(10)
@@ -133,7 +135,7 @@ nv.models.discreteBarPlusLineChartPan = function() {
   //------------------------------------------------------------
   var log10 = function(val){
       return Math.log(val)/Math.LN10;
-  }
+  };
   //============================================================
 
 
@@ -142,10 +144,8 @@ nv.models.discreteBarPlusLineChartPan = function() {
       var container = d3.select(this),
           that = this;
 
-      var availableWidth = (width  || parseInt(container.style('width')) || 960)
-                             - margin.left - margin.right,
-          availableHeight = (height || parseInt(container.style('height')) || 400)
-                             - margin.top - margin.bottom;
+      var availableWidth = (width  || parseInt(container.style('width'), 10) || 960) - margin.left - margin.right,
+          availableHeight = (height || parseInt(container.style('height'), 10) || 400) - margin.top - margin.bottom;
 
       chart.update = function() { 
         dispatch.beforeUpdate(); 
@@ -156,7 +156,7 @@ nv.models.discreteBarPlusLineChartPan = function() {
       //------------------------------------------------------------
       // Display No Data message if there's nothing to show.
 
-      if (!data || !data.length || !data.filter(function(d) { return d.values.length }).length) {
+      if (!data || !data.length || !data.filter(function(d) { return d.values.length; }).length) {
         var noDataText = container.selectAll('.nv-noData').data([noData]);
 
         noDataText.enter().append('text')
@@ -167,7 +167,7 @@ nv.models.discreteBarPlusLineChartPan = function() {
         noDataText
           .attr('x', margin.left + availableWidth / 2)
           .attr('y', margin.top + availableHeight / 2)
-          .text(function(d) { return d });
+          .text(function(d) { return d; });
 
         return chart;
       } else {
@@ -185,7 +185,7 @@ nv.models.discreteBarPlusLineChartPan = function() {
           .attr('x', availableWidth/2)
           .attr('y', 30)
           .attr("text-anchor", "middle")
-          .text(function(d){return d});
+          .text(function(d){ return d; });
       //===================================================================
 
 
@@ -194,10 +194,10 @@ nv.models.discreteBarPlusLineChartPan = function() {
 
       // Insert a series index to pick the correct color.
       data.forEach(function(series, i){
-          series.seriesIndex = i
+          series.seriesIndex = i;
       });
-      var dataBars = data.filter(function(d){ return !d.disabled && d.bar});
-      var dataLines = data.filter(function(d){ return !d.disabled && !d.bar});
+      var dataBars = data.filter(function(d){ return !d.disabled && d.bar; });
+      var dataLines = data.filter(function(d){ return !d.disabled && !d.bar; });
 
       //------------------------------------------------------------
       // Setting up the correct scale
@@ -276,10 +276,25 @@ nv.models.discreteBarPlusLineChartPan = function() {
             .updateState(false) //TODO Keep this false until you figure out how to manage the axis on state-change
             ;
 
-          g.select('.nv-legendWrap')
-            .datum(data)
-            .call(legend)
-            ;
+          // PK: Fix for having multi-colored bars
+          // TODO : Lines currently not get affected. Have to find a better fix
+          if(!multiColorBars){
+            g.select('.nv-legendWrap')
+              .datum(data)
+              .call(legend)
+              ;
+          } else {
+            g.select('.nv-legendWrap')
+              .datum(data[0].values.map(function(d,i){return {key: d.label}; }))
+              .call(legend)
+              ;
+          }
+          // PK : Original code
+          //GOLD//g.select('.nv-legendWrap')
+          //GOLD//  //GOLD//.datum(data)
+          //GOLD//  .datum(data[0].values.map(function(d,i){return {key: d.label}; }))
+          //GOLD//  .call(legend)
+          //GOLD//  ;
 
           g.select('.nv-legendWrap')
             .attr('transform', 'translate(0, ' + (-legend.height()) + ')')
@@ -308,19 +323,42 @@ nv.models.discreteBarPlusLineChartPan = function() {
       //------------------------------------------------------------
       // Main Chart Component(s)
 
-      discretebar
-        .width(availableWidth)
-        .height(availableHeight)
-        .color(
-            data
-                .map(function(d,i){
-                    return d.color || color(d,i);
-                })
-                .filter(function(d,i){
-                    return !data[i].disabled && data[i].bar;
-                })
-            )
-        ;
+      // PK: Fix for multi-color bars
+      // TODO : This doesnot affect the Lines. Have to find a fix for Lines too
+      if(!multiColorBars){
+        discretebar
+          .width(availableWidth)
+          .height(availableHeight)
+          .color(
+              data
+                  .map(function(d,i){
+                      return d.color || color(d,i);
+                  })
+                  .filter(function(d,i){
+                      return !data[i].disabled && data[i].bar;
+                  })
+              )
+          ;
+      } else {
+        discretebar
+          .width(availableWidth)
+          .height(availableHeight)
+          ;
+      }
+      // PK: Original Code for discretebar
+      //GOLD//discretebar
+      //GOLD//  .width(availableWidth)
+      //GOLD//  .height(availableHeight)
+      //GOLD//  .color(
+      //GOLD//      data
+      //GOLD//          .map(function(d,i){
+      //GOLD//              return d.color || color(d,i);
+      //GOLD//          })
+      //GOLD//          .filter(function(d,i){
+      //GOLD//              return !data[i].disabled && data[i].bar;
+      //GOLD//          })
+      //GOLD//      )
+      //GOLD//  ;
 
       if(dataLines.length){
         lines
@@ -339,7 +377,7 @@ nv.models.discreteBarPlusLineChartPan = function() {
       }
 
       var barsWrap = g.select('.nv-barsWrap')
-          .datum(dataBars.filter(function(d) { return !d.disabled }))
+          .datum(dataBars.filter(function(d) { return !d.disabled; }));
       barsWrap.transition().call(discretebar);
 
       var linesWrap;
@@ -348,11 +386,11 @@ nv.models.discreteBarPlusLineChartPan = function() {
             .datum(dataLines.map(function(d){
                 return {
                     key : d.key,
-                    values : d.values.map(function(d,i){return {x:i, y:d.value}}) 
-                }
+                    values : d.values.map(function(d,i){ return {x:i, y:d.value}; }) 
+                };
             }).filter(function(d) { 
-                return !d.disabled 
-            }))
+                return !d.disabled;
+            }));
         // Create the lines
         linesWrap.transition()
             .delay(150)
@@ -436,7 +474,7 @@ nv.models.discreteBarPlusLineChartPan = function() {
           if (staggerLabels) {
             xTicks
                 .selectAll('text')
-                .attr('transform', function(d,i,j) { return 'translate(0,' + (j % 2 == 0 ? '5' : '17') + ')' })
+                .attr('transform', function(d,i,j) { return 'translate(0,' + (j % 2 === 0 ? '5' : '17') + ')'; } );
           }
 
           // Try to rotate the axis labels
@@ -483,7 +521,7 @@ nv.models.discreteBarPlusLineChartPan = function() {
                   .attr("width", 80)
                   .attr("height", 60)
                   .attr("x", "-40");
-                  ;
+                  
         }
       }
 
@@ -499,6 +537,26 @@ nv.models.discreteBarPlusLineChartPan = function() {
 
           g.select('.nv-y.nv-axis').transition()
               .call(yAxis);
+
+        // PK: Plots 'rect' for zebra color scheme
+        if(plotZebraBG){
+
+            var yTickValues = y.ticks(availableHeight/36);
+            var zebraHeight = y(yTickValues[0]) - y(yTickValues[1]);
+
+            g.select('.nvd3 .nv-y.nv-axis').selectAll('.tick.major').selectAll('rect').remove();
+            g.selectAll('.nvd3 .nv-y.nv-axis .tick.major')
+                .sort(function(a,b){
+                    if(a < b) return -1;
+                    if(a > b) return 1;
+                    return 0;
+                })
+                .append('rect')
+                .attr('width', availableWidth)
+                .attr('height', zebraHeight)
+                .attr('y', -zebraHeight)
+            ;
+        }
 
           //CSS////======================================================================
           //CSS//// Set the font size for the Primay y-axis
@@ -572,7 +630,7 @@ nv.models.discreteBarPlusLineChartPan = function() {
                         return {
                             key : d.key,
                             values : {x: e.pointIndex, y: d.values[e.pointIndex]}
-                            }
+                            };
                         });
 
         if (tooltips) showTooltip(e, that.parentNode, linePoints);
@@ -592,14 +650,14 @@ nv.models.discreteBarPlusLineChartPan = function() {
           // Line data
           dataLines
             .filter(function(series, i){
-                return !series.disabled
+                return !series.disabled;
             })
             .map(function(series, i){
                 return {
                     key: series.key,
                     seriesIndex: series.seriesIndex,
-                    values: series.values.map(function(d,i){ return {x:i, y:d.value} })
-                }
+                    values: series.values.map(function(d,i){ return {x:i, y:d.value}; })
+                };
             })
             .forEach(function(series, i){
                 pointIndex = nv.interactiveBisect(series.values, e.pointXValue-lines.xScale().invert(tx), lines.x());
@@ -621,7 +679,7 @@ nv.models.discreteBarPlusLineChartPan = function() {
           // Bars data, This is kind-of dependent on the above call
           dataBars
             .filter(function(series, i){
-                return !series.disabled
+                return !series.disabled;
             })
             .forEach(function(series, i){
                 // if the point was 'undefined' the function would have returned above. It wont even reach here
@@ -789,7 +847,8 @@ nv.models.discreteBarPlusLineChartPan = function() {
   chart.color = function(_) {
     if (!arguments.length) return color;
     color = nv.utils.getColor(_);
-    //discretebar.color(color);
+    // PK: Notice this is kind of redundant but will come into play when we want multicolored bars
+    discretebar.color(color);
     return chart;
   };
 
@@ -914,6 +973,19 @@ nv.models.discreteBarPlusLineChartPan = function() {
     return chart;
   };
 
+  // PK: To enable multi-colored bars
+  chart.multiColorBars = function(_) {
+    if (!arguments.length) return multiColorBars;
+    multiColorBars = _;
+    return chart;
+  };
+
+  // PK: To show zebra background
+  chart.plotZebraBG = function(_) {
+    if (!arguments.length) return plotZebraBG;
+    plotZebraBG = _;
+    return chart;
+  };
   //============================================================
 
 
