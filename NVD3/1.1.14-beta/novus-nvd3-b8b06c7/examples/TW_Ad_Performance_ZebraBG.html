@@ -217,8 +217,24 @@ svg {
 
 /* Width of horizontal tick lines = 1px*/
 .nvd3 .nv-y.nv-axis line {
-    stroke-width: 1px;
+    stroke-width: 0px;
 }
+
+/* Color the horizontal rectangles as a background */
+.nvd3 .nv-y.nv-axis .tick.major:nth-child(even) rect{
+    fill: #D8D8D8;
+    stroke-width: 0px; 
+}
+.nvd3 .nv-y.nv-axis .tick.major:nth-child(odd) rect{
+    fill: #FFFFFF;
+    stroke-width: 0px;
+}
+.nvd3 .nv-y.nv-axis .tick.major:nth-last-of-type(1) rect{
+    fill: #FFFFFF;
+    stroke-width: 0px;
+    fill-opacity : 0 !important;
+}
+/*End coloring */
 
 /* Width of ticks on x-axis = 2px*/
 .nvd3 .nv-x.nv-axis line{
@@ -246,6 +262,7 @@ svg {
 <script src="../src/models/vxLegend.js"></script>
 <script src="../src/models/axis.js"></script>
 <script src="../src/models/scatter.js"></script>
+<script src="../src/models/marker.js"></script>
 <script src="../src/models/vxMarker.js"></script>
 <script src="../src/models/line.js"></script>
 <script src="../src/models/timelineAndSentimentChart.js"></script>
@@ -318,6 +335,9 @@ nv.addGraph(function() {
 
         //chart.extentThreshold(58570*5);
         //chart.plotSentiment(false);
+
+        // PK : plot the zebra background
+        chart.plotZebraBG(true);
 
         /* Tooltip Content Samples*/
         //chart.tooltipContent(function(e, x, y, e, graph){
