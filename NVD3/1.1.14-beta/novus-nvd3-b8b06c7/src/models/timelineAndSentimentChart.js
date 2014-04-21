@@ -47,14 +47,14 @@ nv.models.timelineAndSentimentChart = function() {
       tooltips = true,
       tooltip = function(key, x, y, e, graph) {
         return '<h3>' + key + '</h3>' +
-               '<p>' +  y + ' at ' + x + '</p>'
+               '<p>' +  y + ' at ' + x + '</p>';
       },
       controlCB = function() {
         alert('This is from callback');
       },
       noData = "No Data Available.",
       dispatch = d3.dispatch('tooltipShow', 'tooltipHide', 'brush', 'stateChange'),
-      controlWidth = function() {return showControls ? 180 : 0 },
+      controlWidth = function() {return showControls ? 180 : 0; },
       transitionDuration = 250,
       controlState = true,
       chartTitle = "Chart",
@@ -68,9 +68,10 @@ nv.models.timelineAndSentimentChart = function() {
       extentThreshold = 58750*5,
       useInteractiveGuideLine = false,
       plotSentiment = false,
-      plotContext = false,
+      plotContext = true,
       plotMarker = true,
-      markerColorScheme = 'implicit' // This can be 'implicit' or 'explicit'
+      markerColorScheme = 'implicit', // This can be 'implicit' or 'explicit'
+      plotZebraBG = false
     ;
 
   lines
@@ -101,6 +102,7 @@ nv.models.timelineAndSentimentChart = function() {
     .orient('bottom')
     .tickPadding(5)
     .tickFormat(d3.time.scale().tickFormat())
+    .showMaxMin(false)
     ;
   y2Axis
     .orient('left')
@@ -124,7 +126,8 @@ nv.models.timelineAndSentimentChart = function() {
   marker
     .defaultStyle(1)
     // The same function is used to determine the text, so I have to defined this function
-    .pointKey(function(d){ return (typeof d.y0 !== 'undefined') ? d.y0 : d.y; })
+    //.pointKey(function(d){ return (typeof d.y0 !== 'undefined') ? d.y0 : d.y; })
+    .pointKey(function(d){ return (typeof d.y0 !== 'undefined') ? d.y0 : (d.y.toString() + d.x.toString()); })
     ;
 
   controls.updateState(false);
@@ -181,12 +184,12 @@ nv.models.timelineAndSentimentChart = function() {
     
 
       // This is the timeline data 
-      var timelineData = data.filter(function(d){return d.timeline});
+      var timelineData = data.filter(function(d){ return d.timeline; });
 
       // This is the sentiment data. If sentiment is not plotted then height of sentiment is 0
       var sentimentData;
       if(plotSentiment){
-        sentimentData = data.filter(function(d){return d.sentiment});
+        sentimentData = data.filter(function(d){ return d.sentiment; });
       } else {
           heightSentiment = 0;
           dist12 = 20;
@@ -195,7 +198,7 @@ nv.models.timelineAndSentimentChart = function() {
       // This is marker data for all different types of markers
       var markerData;
       if(plotMarker){
-          markerData = data.filter(function(d){ return d.event});
+          markerData = data.filter(function(d){ return d.event; });
 
           // If 'linkedTo' is undefined then markerStyle is always 1, cause it doesnt require 'y'
           markerData
@@ -247,7 +250,7 @@ nv.models.timelineAndSentimentChart = function() {
 
           // Assign value to be disaplyed if the markerStyle == 3
           markerData
-              .filter(function(series){ return series.markerStyle == 3})
+              .filter(function(series){ return series.markerStyle == 3; })
               .forEach(function(series,i){
                   series.values.forEach(function(point, j){
                       point.y0 = j+1;
@@ -300,22 +303,21 @@ nv.models.timelineAndSentimentChart = function() {
           dist23 = 20;
       }
 
-      var availableWidth = (width  || parseInt(container.style('width')) || 960)
-                             - margin.left - margin.right,
-          availableHeight = (width  || parseInt(container.style('height')) || 600)
-                                - margin.top - margin.bottom,
+      var availableWidth = (width  || parseInt(container.style('width'), 10) || 960) - margin.left - margin.right,
+          availableHeight = (width  || parseInt(container.style('height'), 10) || 600) - margin.top - margin.bottom,
          // TODO Resize the sentiment and focus chart if necessary. Not sure though
          heightFocus = availableHeight - heightSentiment - heightContext - dist12 - dist23;
 
-      chart.update = function() { container.transition().duration(transitionDuration).call(chart) };
+      chart.update = function() { container.transition().duration(transitionDuration).call(chart); };
       chart.container = this;
 
 
       //------------------------------------------------------------
       // Display No Data message if there's nothing to show.
 
-      if (!timelineData || !timelineData.length || !timelineData.filter(function(d) { return d.values.length }).length) {
-        var noDataText = container.selectAll('.nv-noData').data([noData]);
+      var noDataText;
+      if (!timelineData || !timelineData.length || !timelineData.filter(function(d) { return d.values.length; }).length) {
+        noDataText = container.selectAll('.nv-noData').data([noData]);
 
         noDataText.enter().append('text')
           .attr('class', 'nvd3 nv-noData')
@@ -325,7 +327,7 @@ nv.models.timelineAndSentimentChart = function() {
         noDataText
           .attr('x', margin.left + availableWidth / 2)
           .attr('y', margin.top + availableHeight / 2)
-          .text(function(d) { return d });
+          .text(function(d) { return d; });
 
         return chart;
       } else {
@@ -334,8 +336,8 @@ nv.models.timelineAndSentimentChart = function() {
 
       // Display No Data message if there is nothing to show on the sentiment chart
       if(plotSentiment){
-        if (!sentimentData || !sentimentData.length || !sentimentData.filter(function(d) { return d.values.length }).length) {
-          var noDataText = container.selectAll('.nv-noData').data([noData]);
+        if (!sentimentData || !sentimentData.length || !sentimentData.filter(function(d) { return d.values.length; }).length) {
+          noDataText = container.selectAll('.nv-noData').data([noData]);
 
           noDataText.enter().append('text')
             .attr('class', 'nvd3 nv-noData')
@@ -345,7 +347,7 @@ nv.models.timelineAndSentimentChart = function() {
           noDataText
             .attr('x', margin.left + availableWidth / 2)
             .attr('y', margin.top + heightSentiment / 2)
-            .text(function(d) { return d });
+            .text(function(d) { return d; });
         } else {
           container.selectAll('.nv-noData').remove();
         }
@@ -365,7 +367,7 @@ nv.models.timelineAndSentimentChart = function() {
           .attr('y', 30)
           .attr("text-anchor", "middle")
           //.attr("style", chartTitleStyle)
-          .text(function(d){return d});
+          .text(function(d){ return d; });
       //===================================================================
 
 
@@ -405,7 +407,7 @@ nv.models.timelineAndSentimentChart = function() {
       focusEnter.append('g').attr('class', 'nv-y nv-axis')
           .append('g').attr('class', 'nv-zeroLine')
           .append('line');
-          ;
+          
       focusEnter.append('g').attr('class', 'nv-linesWrap');
       focusEnter.append('g').attr('class', 'nv-interactive');
       
@@ -414,7 +416,7 @@ nv.models.timelineAndSentimentChart = function() {
       sentiEnter.append('g').attr('class', 'nv-y nv-axis')
           .append('g').attr('class', 'nv-zeroLine2')
           .append('line');
-          ;
+          
       sentiEnter.append('g').attr('class', 'nv-linesWrap');
 
       var contextEnter = gEnter.append('g').attr('class', 'nv-context');
@@ -422,7 +424,7 @@ nv.models.timelineAndSentimentChart = function() {
       contextEnter.append('g').attr('class', 'nv-y nv-axis')
           .append('g').attr('class', 'nv-zeroLine1')
           .append('line');
-          ;
+          
       contextEnter.append('g').attr('class', 'nv-linesWrap');
       contextEnter.append('g').attr('class', 'nv-brushBackground');
       contextEnter.append('g').attr('class', 'nv-x nv-brush');
@@ -443,7 +445,7 @@ nv.models.timelineAndSentimentChart = function() {
 
         var legendData;
         if(plotMarker){
-            legendData = d3.merge([timelineData, markerData])
+            legendData = d3.merge([timelineData, markerData]);
         } else {
             legendData = timelineData;
         }
@@ -525,7 +527,7 @@ nv.models.timelineAndSentimentChart = function() {
           );
 
         var sentiLinesWrap = g.select('.nv-senti .nv-linesWrap')
-            .datum(sentimentData.filter(function(d,i) { return !timelineData[i].disabled }))
+            .datum(sentimentData.filter(function(d,i) { return !timelineData[i].disabled; }));
 
         d3.transition(sentiLinesWrap).call(lines3);
       }
@@ -545,7 +547,7 @@ nv.models.timelineAndSentimentChart = function() {
         );
 
       g.select('.nv-focus')
-          .attr('transform', 'translate(0,' + (heightSentiment + dist12) + ')')
+          .attr('transform', 'translate(0,' + (heightSentiment + dist12) + ')');
      
  
       if(plotContext){
@@ -565,10 +567,10 @@ nv.models.timelineAndSentimentChart = function() {
           );
 
         g.select('.nv-context')
-            .attr('transform', 'translate(0,' + (heightSentiment + dist12 + heightFocus + dist23) + ')')
+            .attr('transform', 'translate(0,' + (heightSentiment + dist12 + heightFocus + dist23) + ')');
 
         var contextLinesWrap = g.select('.nv-context .nv-linesWrap')
-            .datum(timelineData.filter(function(d) { return !d.disabled }))
+            .datum(timelineData.filter(function(d) { return !d.disabled; }));
 
         d3.transition(contextLinesWrap).call(lines2);
       }
@@ -635,7 +637,7 @@ nv.models.timelineAndSentimentChart = function() {
       if (brushExtent) brush.extent(brushExtent);
 
       var brushBG = g.select('.nv-brushBackground').selectAll('g')
-          .data([brushExtent || brush.extent()])
+          .data([brushExtent || brush.extent()]);
 
       var brushBGenter = brushBG.enter()
           .append('g');
@@ -670,7 +672,7 @@ nv.models.timelineAndSentimentChart = function() {
       g.select('.nv-x.nv-brush').selectAll('.extent')
           .attr("style", "fill:rgb(0,0,0);fill-opacity:0.15 !important")
           .style("cursor", "move");
-          ;
+          
 
       onBrush();
 
@@ -684,6 +686,7 @@ nv.models.timelineAndSentimentChart = function() {
         x2Axis
           .scale(x2)
           .ticks( availableWidth / 100 )
+          //.ticks(d3.time.hours, 1)
           .tickSize(-heightContext, 0);
 
         g.select('.nv-context .nv-x.nv-axis')
@@ -897,15 +900,7 @@ nv.models.timelineAndSentimentChart = function() {
         var e = +(d == 'e'),
             x = e ? 1 : -1,
             y = heightContext / 3;
-        return 'M' + (.5 * x) + ',' + y
-            + 'A6,6 0 0 ' + e + ' ' + (6.5 * x) + ',' + (y + 6)
-            + 'V' + (2 * y - 6)
-            + 'A6,6 0 0 ' + e + ' ' + (.5 * x) + ',' + (2 * y)
-            + 'Z'
-            + 'M' + (2.5 * x) + ',' + (y + 8)
-            + 'V' + (2 * y - 8)
-            + 'M' + (4.5 * x) + ',' + (y + 8)
-            + 'V' + (2 * y - 8);
+        return 'M' + (0.5 * x) + ',' + y + 'A6,6 0 0 ' + e + ' ' + (6.5 * x) + ',' + (y + 6) + 'V' + (2 * y - 6) + 'A6,6 0 0 ' + e + ' ' + (0.5 * x) + ',' + (2 * y) + 'Z' + 'M' + (2.5 * x) + ',' + (y + 8) + 'V' + (2 * y - 8) + 'M' + (4.5 * x) + ',' + (y + 8) + 'V' + (2 * y - 8);
       }
 
 
@@ -932,7 +927,7 @@ nv.models.timelineAndSentimentChart = function() {
 
         // Provide an external extent if context is not drawn
         if(!plotContext)
-            extent = d3.extent(timelineData[0].values.map(function(d){ return d.x}));
+            extent = d3.extent(timelineData[0].values.map(function(d){ return d.x; }));
 
         //The brush extent cannot be less than one (thousand).  If it is, don't update the line chart.
         // changing 1 -> 1000, 58750 ~ 1 min
@@ -952,14 +947,14 @@ nv.models.timelineAndSentimentChart = function() {
         var focusLinesWrap = g.select('.nv-focus .nv-linesWrap')
             .datum(
               timelineData
-                .filter(function(d) { return !d.disabled })
+                .filter(function(d) { return !d.disabled; })
                 .map(function(d,i) {
                   return {
                     key: d.key,
                     values: d.values.filter(function(d,i) {
                       return lines.x()(d,i) >= extent[0] && lines.x()(d,i) <= extent[1];
                     })
-                  }
+                  };
                 })
             );
 
@@ -972,6 +967,26 @@ nv.models.timelineAndSentimentChart = function() {
         //y.nice();
         g.select('.nv-focus .nv-y.nv-axis').transition().duration(transitionDuration)
             .call(yAxis);
+
+        // PK: Plots 'rect' for zebra color scheme
+        if(plotZebraBG){
+
+            var yTickValues = y.ticks(heightFocus/60);
+            var zebraHeight = y(yTickValues[0]) - y(yTickValues[1]);
+
+            g.select('.nv-focus .nv-y.nv-axis').selectAll('.tick.major').selectAll('rect').remove();
+            g.selectAll('.nv-focus .nv-y.nv-axis .tick.major')
+                .sort(function(a,b){
+                    if(a < b) return -1;
+                    if(a > b) return 1;
+                    return 0;
+                })
+                .append('rect')
+                .attr('width', availableWidth)
+                .attr('height', zebraHeight)
+                .attr('y', -zebraHeight)
+            ;
+        }
 
         //======================================================================
         // Set the font size for the Primay y-axis
@@ -986,14 +1001,14 @@ nv.models.timelineAndSentimentChart = function() {
             var sentiLinesWrap = g.select('.nv-senti .nv-linesWrap')
                 .datum(
                   sentimentData
-                    .filter(function(d,i) { return !timelineData[i].disabled })
+                    .filter(function(d,i) { return !timelineData[i].disabled; })
                     .map(function(d,i) {
                       return {
                         key: d.key,
                         values: d.values.filter(function(d,i) {
                           return lines3.x()(d,i) >= extent[0] && lines3.x()(d,i) <= extent[1];
                         })
-                      }
+                      };
                     })
                 );
             sentiLinesWrap.transition().duration(transitionDuration).call(lines3);
@@ -1017,7 +1032,7 @@ nv.models.timelineAndSentimentChart = function() {
                 .datum(
                         markerData
                           //GOLD//.filter(function(d,i){return !timelineData[i].disabled})
-                          .filter(function(d,i){return !d.disabled})
+                          .filter(function(d,i){ return !d.disabled; })
                           .map(function(d,i){
                               return {
                                   key: d.key,
@@ -1028,7 +1043,7 @@ nv.models.timelineAndSentimentChart = function() {
                                       return lines.x()(d,i) >= extent[0] && lines.x()(d,i) <= extent[1];
                                   })
                                   //values : temp
-                              }
+                              };
                           })
                         );
             markerWrap.transition().duration(transitionDuration).call(marker);
@@ -1305,6 +1320,12 @@ nv.models.timelineAndSentimentChart = function() {
   chart.markerColorScheme = function(_) {
     if (!arguments.length) return markerColorScheme;
     markerColorScheme = _;
+    return chart;
+  };
+
+  chart.plotZebraBG = function(_) {
+    if (!arguments.length) return plotZebraBG;
+    plotZebraBG = _;
     return chart;
   };
 
