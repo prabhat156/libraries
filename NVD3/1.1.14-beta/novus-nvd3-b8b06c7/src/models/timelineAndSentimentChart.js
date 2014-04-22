@@ -25,7 +25,7 @@ nv.models.timelineAndSentimentChart = function() {
       margin2 = {top: 30, right: 30, bottom: 20, left: 60},
       margin3 = {top: 30, right: 30, bottom: 20, left: 60},
       dist12 = 20,
-      dist23 = 30,
+      dist23 = 50,
       color = nv.utils.defaultColor(),
       markerColor = nv.utils.defaultColor(),
       showControls = false,
@@ -71,7 +71,8 @@ nv.models.timelineAndSentimentChart = function() {
       plotContext = true,
       plotMarker = true,
       markerColorScheme = 'implicit', // This can be 'implicit' or 'explicit'
-      plotZebraBG = false
+      plotZebraBG = false,
+      rotateXLabels = 0
     ;
 
   lines
@@ -300,7 +301,8 @@ nv.models.timelineAndSentimentChart = function() {
       // Reset context height and dist23
       if(!plotContext){
           heightContext = 0;
-          dist23 = 20;
+          // PK : Commented the following line
+          //dist23 = 20;
       }
 
       var availableWidth = (width  || parseInt(container.style('width'), 10) || 960) - margin.left - margin.right,
@@ -596,7 +598,9 @@ nv.models.timelineAndSentimentChart = function() {
         .ticks(d3.time.minutes, 15)
         .axisLabel(xAxisLabel)
         //.tickSize(-heightFocus, 0)
-        .axisLabelDistance(50)
+        //GOLD//.axisLabelDistance(50)
+        // PK : Updated way of positioning the label text
+        .axisLabelDistance(dist23-10)
         .tickSize(7)
         ;
 
@@ -1326,6 +1330,19 @@ nv.models.timelineAndSentimentChart = function() {
   chart.plotZebraBG = function(_) {
     if (!arguments.length) return plotZebraBG;
     plotZebraBG = _;
+    return chart;
+  };
+
+  chart.dist23 = function(_) {
+    if (!arguments.length) return dist23;
+    dist23 = _;
+    return chart;
+  };
+
+  chart.rotateXLabels = function(_) {
+    if (!arguments.length) return rotateXLabels;
+    rotateXLabels = _;
+    xAxis.rotateLabels(rotateXLabels);
     return chart;
   };
 
