@@ -45,6 +45,19 @@ text {
     font-size: 12pt;
     fill: #3c4f54;
 }
+
+.nvtooltip.xy-tooltip .nvtooltip-key {
+    font-size : 12px;
+    font-weight : bold;
+    fill : #3c4f54;
+
+}
+.nvtooltip.xy-tooltip .nvtooltip-value {
+    font-size : 16px;
+    font-weight : bold;
+    fill : #223135;
+
+}
 </style>
 <body>
 
@@ -99,11 +112,18 @@ nv.addGraph(function() {
         .showLabels(true)
         .labelType('percent')
         .chartTitle('Sample Pie-Chart')
-        .tooltips(false)
+        .tooltips(true)
         .orientation('bottom')
         .defaultStyle(5)
         //.legendPosY(430)
         ;
+
+      // New Tooltip
+      chart.tooltipContent(function(key, y, e, graph) {
+        return '<p class="nvtooltip-key">' + key + '</p>' +
+               '<p class="nvtooltip-value">' +  y + '</p>';
+      });
+
 
       d3.select("#test1 svg")
           .datum(testdata)
