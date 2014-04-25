@@ -98,7 +98,7 @@ nv.models.line = function() {
           .attr('width', availableWidth+16)
           .attr('height', availableHeight+16)
           .attr('x', -8)
-          .attr('y', 8)
+          .attr('y', -8)
           ;
 
       g   .attr('clip-path', clipEdge ? 'url(#nv-edge-clip-' + scatter.id() + ')' : '');
