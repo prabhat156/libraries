@@ -978,18 +978,122 @@ nv.models.timelineAndSentimentChart = function() {
             var yTickValues = y.ticks(heightFocus/60);
             var zebraHeight = y(yTickValues[0]) - y(yTickValues[1]);
 
-            g.select('.nv-focus .nv-y.nv-axis').selectAll('.tick.major').selectAll('rect').remove();
-            g.selectAll('.nv-focus .nv-y.nv-axis .tick.major')
-                .sort(function(a,b){
-                    if(a < b) return -1;
-                    if(a > b) return 1;
-                    return 0;
-                })
+            // Select the tick.major only for the tick values
+            var tickUpdate = g.selectAll('.nv-focus .nv-y.nv-axis .tick.major')
+                                .data(yTickValues, function(d){ return d; });
+
+            // Use the update selection / default selection
+            var zebraBG = tickUpdate
+                                .selectAll('rect')
+                                .data(function(d){
+                                    var idx = yTickValues.indexOf(d);
+                                    var last_node = false;
+                                    if(idx == yTickValues.length-1){
+                                        last_node = true;
+                                    }
+                                    return [ {value: d, flag: (idx&1), ln_flag: last_node} ];
+                                }, function(d){ return d.value; });
+
+            // Enter Selection
+            zebraBG
+                .enter()
                 .append('rect')
                 .attr('width', availableWidth)
-                .attr('height', zebraHeight)
+                .attr('height', function(d){
+                    if(!d.ln_flag) return zebraHeight;
+                    else return 0;
+                })
                 .attr('y', -zebraHeight)
-            ;
+                .attr('class', function(d){
+                    if(d.ln_flag) return 'zebra-bg-last-node';
+                    if(d.flag) return 'zebra-bg-odd-node';
+                    else return 'zebra-bg-even-node';
+                });
+            // Exit Selection
+            zebraBG.exit().remove();
+
+            // Update Selection
+            zebraBG
+                .attr('width', availableWidth)
+                .attr('height', function(d){
+                    if(!d.ln_flag) return zebraHeight;
+                    else return 0;
+                })
+                .attr('y', -zebraHeight)
+                .attr('class', function(d){
+                    if(d.ln_flag) return 'zebra-bg-last-node';
+                    if(d.flag) return 'zebra-bg-odd-node';
+                    else return 'zebra-bg-even-node';
+                });
+
+            // ** WORKING CODE BELOW **
+            //console.log(d3.transition(g.selectAll('.nv-focus .nv-y.nv-axis .tick.major')));
+            //console.log(g.select('.nv-focus .nv-y.nv-axis .tick.major').length);
+
+            //OLD-GOLD//var yTickValues = y.ticks(heightFocus/60);
+            //OLD-GOLD//var zebraHeight = y(yTickValues[0]) - y(yTickValues[1]);
+            //OLD-GOLD//// OLD implementation, you might want to get rid of this
+            //OLD-GOLD//g.select('.nv-focus .nv-y.nv-axis').selectAll('.tick.major').selectAll('rect').remove();
+            //OLD-GOLD//g.selectAll('.nv-focus .nv-y.nv-axis .tick.major')
+            //OLD-GOLD//    .sort(function(a,b){
+            //OLD-GOLD//        if(a < b) return -1;
+            //OLD-GOLD//        if(a > b) return 1;
+            //OLD-GOLD//        return 0;
+            //OLD-GOLD//    })
+            //OLD-GOLD//    .append('rect')
+            //OLD-GOLD//    .attr('width', availableWidth)
+            //OLD-GOLD//    .attr('height', zebraHeight)
+            //OLD-GOLD//    .attr('y', -zebraHeight)
+            //OLD-GOLD//;
+
+            // New implementation, notice changes to CSS as well
+            // TODO : Currently commented because the above code is there in github
+            //NEW-GOLD//// Data Join
+            //NEW-GOLD//var zebraWrap = g.selectAll('.nv-focus .nv-y.nv-axis .tick.major').selectAll('rect')
+            //NEW-GOLD//                .data(function(d, i){
+            //NEW-GOLD//                    var idx = yTickValues.indexOf(d);
+            //NEW-GOLD//                    var last_node = false;
+            //NEW-GOLD//                    if(idx === (yTickValues.length-1)){
+            //NEW-GOLD//                        last_node = true;
+            //NEW-GOLD//                    }
+            //NEW-GOLD//                    if(idx != -1) {
+            //NEW-GOLD//                        return [ {value: d, flag: (idx&1), ln_flag: last_node} ];
+            //NEW-GOLD//                    } else {
+            //NEW-GOLD//                        // An empty error would be treated as no data.
+            //NEW-GOLD//                        return [];
+            //NEW-GOLD//                    }
+            //NEW-GOLD//                }, function(d){ return d.value; });
+
+            //NEW-GOLD//// Enter selection
+            //NEW-GOLD//zebraWrap
+            //NEW-GOLD//    .enter()
+            //NEW-GOLD//    .append('rect')
+            //NEW-GOLD//    .attr('width', availableWidth)
+            //NEW-GOLD//    .attr('height', function(d){
+            //NEW-GOLD//        if(!d.ln_flag) return zebraHeight;
+            //NEW-GOLD//        else return 0;
+            //NEW-GOLD//    })
+            //NEW-GOLD//    .attr('y', -zebraHeight)
+            //NEW-GOLD//    .attr('class', function(d){
+            //NEW-GOLD//        if(d.ln_flag) return 'zebra-bg-last-node';
+            //NEW-GOLD//        if(d.flag) return 'zebra-bg-odd-node';
+            //NEW-GOLD//        else return 'zebra-bg-even-node';
+            //NEW-GOLD//    });
+            //NEW-GOLD//// Exit selection
+            //NEW-GOLD//zebraWrap.exit().remove();
+            //NEW-GOLD//// Update Selection
+            //NEW-GOLD//zebraWrap
+            //NEW-GOLD//    .attr('width', availableWidth)
+            //NEW-GOLD//    .attr('height', function(d){
+            //NEW-GOLD//        if(!d.ln_flag) return zebraHeight;
+            //NEW-GOLD//        else return 0;
+            //NEW-GOLD//    })
+            //NEW-GOLD//    .attr('y', -zebraHeight)
+            //NEW-GOLD//    .attr('class', function(d){
+            //NEW-GOLD//        if(d.ln_flag) return 'zebra-bg-last-node';
+            //NEW-GOLD//        if(d.flag) return 'zebra-bg-odd-node';
+            //NEW-GOLD//        else return 'zebra-bg-even-node';
+            //NEW-GOLD//    });
         }
 
         //======================================================================
