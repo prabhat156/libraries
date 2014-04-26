@@ -508,6 +508,30 @@ nv.models.discreteBarPlusLineChartPan = function() {
 
         // Adding image to the x-axis label, Currently deleting the text
         if(displayXImageLabel){
+
+            //CORRECT-GOLD//var tickUpdate = g.selectAll('.nv-x.nv-axis .tick.major')
+            //CORRECT-GOLD//                    .data(dataBars[0].values.map(function(d){ return d.label}), function(d){ return d; });
+
+            //CORRECT-GOLD//var imageWrap = tickUpdate
+            //CORRECT-GOLD//                    .selectAll('image')
+            //CORRECT-GOLD//                    .data(function(d){
+            //CORRECT-GOLD//                        return dataBars[0].values.filter(function(dd){ return dd.label === d; });
+            //CORRECT-GOLD//                    }, function(d){ return d.label; })
+
+            //CORRECT-GOLD//imageWrap
+            //CORRECT-GOLD//      .enter()
+            //CORRECT-GOLD//      .append('image')
+            //CORRECT-GOLD//      .attr('xlink:href', function(d){ console.log(d.image); return d.image; })
+            //CORRECT-GOLD//      .attr('width', 80)
+            //CORRECT-GOLD//      .attr('height', 60)
+            //CORRECT-GOLD//      .attr("x", "-40");
+            //CORRECT-GOLD//imageWrap.exit().remove();
+            //CORRECT-GOLD//imageWrap
+            //CORRECT-GOLD//      .attr('xlink:href', function(d){ return d.image; })
+            //CORRECT-GOLD//      .attr('width', 80)
+            //CORRECT-GOLD//      .attr('height', 60)
+            //CORRECT-GOLD//      .attr("x", "-40");
+
             // Remove the text label
             g.select('.nv-x.nv-axis').selectAll('.tick.major').selectAll('text').remove();
             // Add the image label
@@ -540,22 +564,74 @@ nv.models.discreteBarPlusLineChartPan = function() {
 
         // PK: Plots 'rect' for zebra color scheme
         if(plotZebraBG){
-
             var yTickValues = y.ticks(availableHeight/36);
             var zebraHeight = y(yTickValues[0]) - y(yTickValues[1]);
 
-            g.select('.nvd3 .nv-y.nv-axis').selectAll('.tick.major').selectAll('rect').remove();
-            g.selectAll('.nvd3 .nv-y.nv-axis .tick.major')
-                .sort(function(a,b){
-                    if(a < b) return -1;
-                    if(a > b) return 1;
-                    return 0;
-                })
+            // Select the tick.major only for the tick values
+            var tickUpdate = g.selectAll('.nvd3 .nv-y.nv-axis .tick.major')
+                                .data(yTickValues, function(d){ return d; });
+
+            // Use the update selection / default selection
+            var zebraBG = tickUpdate
+                                .selectAll('rect')
+                                .data(function(d){
+                                    var idx = yTickValues.indexOf(d);
+                                    var last_node = false;
+                                    if(idx == yTickValues.length-1){
+                                        last_node = true;
+                                    }
+                                    return [ {value: d, flag: (idx&1), ln_flag: last_node} ];
+                                }, function(d){ return d.value; });
+
+            // Enter Selection
+            zebraBG
+                .enter()
                 .append('rect')
                 .attr('width', availableWidth)
-                .attr('height', zebraHeight)
+                .attr('height', function(d){
+                    if(!d.ln_flag) return zebraHeight;
+                    else return 0;
+                })
                 .attr('y', -zebraHeight)
-            ;
+                .attr('class', function(d){
+                    if(d.ln_flag) return 'zebra-bg-last-node';
+                    if(d.flag) return 'zebra-bg-odd-node';
+                    else return 'zebra-bg-even-node';
+                });
+            // Exit Selection
+            zebraBG.exit().remove();
+
+            // Update Selection
+            zebraBG
+                .attr('width', availableWidth)
+                .attr('height', function(d){
+                    if(!d.ln_flag) return zebraHeight;
+                    else return 0;
+                })
+                .attr('y', -zebraHeight)
+                .attr('class', function(d){
+                    if(d.ln_flag) return 'zebra-bg-last-node';
+                    if(d.flag) return 'zebra-bg-odd-node';
+                    else return 'zebra-bg-even-node';
+                });
+
+
+            // This is the old code
+            //OLD-GOLD//var yTickValues = y.ticks(availableHeight/36);
+            //OLD-GOLD//var zebraHeight = y(yTickValues[0]) - y(yTickValues[1]);
+
+            //OLD-GOLD//g.select('.nvd3 .nv-y.nv-axis').selectAll('.tick.major').selectAll('rect').remove();
+            //OLD-GOLD//g.selectAll('.nvd3 .nv-y.nv-axis .tick.major')
+            //OLD-GOLD//    .sort(function(a,b){
+            //OLD-GOLD//        if(a < b) return -1;
+            //OLD-GOLD//        if(a > b) return 1;
+            //OLD-GOLD//        return 0;
+            //OLD-GOLD//    })
+            //OLD-GOLD//    .append('rect')
+            //OLD-GOLD//    .attr('width', availableWidth)
+            //OLD-GOLD//    .attr('height', zebraHeight)
+            //OLD-GOLD//    .attr('y', -zebraHeight)
+            //OLD-GOLD//;
         }
 
           //CSS////======================================================================
