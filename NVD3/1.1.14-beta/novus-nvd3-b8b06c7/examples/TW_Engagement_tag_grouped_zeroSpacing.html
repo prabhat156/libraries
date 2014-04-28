@@ -82,13 +82,29 @@ text {
 
 /* Width of horizontal tick lines = 1px*/
 .nvd3 .nv-y.nv-axis line {
-    stroke-width: 1px;
+    stroke-width: 0px;
 }
 
 /* Width of ticks on x-axis = 2px*/
 .nvd3 .nv-x-ticks.nv-axis line{
     stroke-width: 2px;
 }
+
+/* Color the horizontal rectangles as a background */
+.nvd3 .nv-y.nv-axis .tick.major rect.zebra-bg-odd-node{
+    fill: #D8D8D8;
+    stroke-width: 0px; 
+}
+.nvd3 .nv-y.nv-axis .tick.major rect.zebra-bg-even-node{
+    fill: #FFFFFF;
+    stroke-width: 0px;
+}
+.nvd3 .nv-y.nv-axis .tick.major rect.zebra-bg-last-node{
+    fill: #FFFFFF;
+    stroke-width: 0px;
+    fill-opacity : 0 !important;
+}
+/*End coloring */
 
 </style>
 <body>
@@ -208,6 +224,9 @@ nv.addGraph(function() {
 
     // Reduce the spacing between the vertical bars to 0
     chart.barSpacing(0);
+
+    // Plot Zebra BG
+    chart.plotZebraBG(true);
 
     d3.select('#chart1 svg')
         .datum(negative_test_data)
