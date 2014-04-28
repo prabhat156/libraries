@@ -42,7 +42,8 @@ nv.models.multiBarGroupChart = function() {
       xAxisLabel = "x-Axis Label",
       yAxisLabel = "y-Axis Label",
       yAxisLabelStyle = "text-anchor:middle;font-size:18px",
-      tooltipValueFormat = d3.format(',.2f');
+      tooltipValueFormat = d3.format(',.2f'),
+      plotZebraBG = false;
 
   multibar
     .stacked(true)
@@ -400,6 +401,63 @@ nv.models.multiBarGroupChart = function() {
           //g.select('.nv-y.nv-axis').select('.nv-axis').select('.nv-axislabel')
           //    .attr("style", yAxisLabelStyle);
 
+          // PK: Plots 'rect' for zebra color scheme
+          if(plotZebraBG){
+
+              var yTickValues = y.ticks(availableHeight/60);
+              var zebraHeight = y(yTickValues[0]) - y(yTickValues[1]);
+
+              // Select the tick.major only for the tick values
+              var tickUpdate = g.selectAll('.nvd3 .nv-y.nv-axis .tick.major')
+                                  .data(yTickValues, function(d){ return d; });
+
+              // Use the update selection / default selection
+              var zebraBG = tickUpdate
+                                  .selectAll('rect')
+                                  .data(function(d){
+                                      var idx = yTickValues.indexOf(d);
+                                      var last_node = false;
+                                      if(idx == yTickValues.length-1){
+                                          last_node = true;
+                                      }
+                                      return [ {value: d, flag: (idx&1), ln_flag: last_node} ];
+                                  }, function(d){ return d.value; });
+
+              // Enter Selection
+              zebraBG
+                  .enter()
+                  .append('rect')
+                  .attr('width', availableWidth)
+                  .attr('height', function(d){
+                      if(!d.ln_flag) return zebraHeight;
+                      else return 0;
+                  })
+                  .attr('y', -zebraHeight)
+                  .attr('class', function(d){
+                      if(d.ln_flag) return 'zebra-bg-last-node';
+                      if(d.flag) return 'zebra-bg-odd-node';
+                      else return 'zebra-bg-even-node';
+                  });
+              // Exit Selection
+              zebraBG.exit().remove();
+
+              // Update Selection
+              zebraBG
+                  .attr('width', availableWidth)
+                  .attr('height', function(d){
+                      if(!d.ln_flag) return zebraHeight;
+                      else return 0;
+                  })
+                  .attr('y', -zebraHeight)
+                  .attr('class', function(d){
+                      if(d.ln_flag) return 'zebra-bg-last-node';
+                      if(d.flag) return 'zebra-bg-odd-node';
+                      else return 'zebra-bg-even-node';
+                  });
+
+          }
+
+
           g.select('.nv-zeroLine line')
             .attr("x1", 0)
             .attr("x2", availableWidth)
@@ -685,6 +743,12 @@ nv.models.multiBarGroupChart = function() {
   chart.tooltipValueFormat = function(_) {
     if (!arguments.length) return tooltipValueFormat;
     tooltipValueFormat = _;
+    return chart;
+  };
+
+  chart.plotZebraBG = function(_) {
+    if (!arguments.length) return plotZebraBG;
+    plotZebraBG = _;
     return chart;
   };
 
